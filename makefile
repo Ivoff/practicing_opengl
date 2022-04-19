@@ -2,7 +2,7 @@ OBJS = src/*.cpp src/glad/glad.c
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc
 CC = g++
-COMPILER_FLAGS = -w
+COMPILER_FLAGS = -w -g
 LINKER_FLAGS = -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
 OBJ_NAME = a.out
 
@@ -13,6 +13,6 @@ clear:
 run:
 	./build/$(OBJ_NAME)
 reset:
-	make clear && make && make run
+	make clear && make && make run	
 setup:
 	./setup.sh
