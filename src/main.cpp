@@ -76,10 +76,13 @@ int main()
     //     0.5f, 0.5f, 1.0f
     // };
     
-    static float vertex[] {
+    static float vertex1[] {
         -0.75f, -0.5f, 1.0f,
         -0.5f, 0.5f, 1.0f,
-        -0.25f, -0.5f, 1.0f,
+        -0.25f, -0.5f, 1.0f        
+    };
+
+    static float vertex2[] {        
         0.25f, -0.5f, 1.0f,
         0.5f, 0.5f, 1.0f,
         0.75f, -0.5f, 1.0f
@@ -87,8 +90,10 @@ int main()
 
     static unsigned int elements[] {0, 1, 2, 1, 2, 3};
 
-    static unsigned int vao;
-    static unsigned int vbo;
+    static unsigned int vao1;
+    static unsigned int vbo1;
+    static unsigned int vao2;
+    static unsigned int vbo2;
     static unsigned int ebo;
     static unsigned int vert_shader_id;
     static unsigned int frag_shader_id;
@@ -99,20 +104,38 @@ int main()
     static unsigned int err_log_len;
     static char* err_log_msg = NULL;
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+// ======================================================================================================
 
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_STATIC_DRAW);
-    
+    glGenVertexArrays(1, &vao1);
+    glBindVertexArray(vao1);
+
+    glGenBuffers(1, &vbo1);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo1);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex1), vertex1, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);    
+    glEnableVertexArrayAttrib(vao1, 0);
+    glBindVertexArray(0);
+
+// ======================================================================================================
+
+    glGenVertexArrays(1, &vao2);
+    glBindVertexArray(vao2);
+
+    glGenBuffers(1, &vbo2);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex2), vertex2, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);    
+    glEnableVertexArrayAttrib(vao2, 0);
+    glBindVertexArray(0);
+
+// ======================================================================================================
+
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);    
-    glEnableVertexArrayAttrib(vao, 0);
-
+    
     vert_shader_id = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vert_shader_id, 1, &vert_shader_source, NULL);
     glCompileShader(vert_shader_id);
@@ -180,7 +203,11 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(vao1);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glBindVertexArray(vao2);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);        
         glfwPollEvents(); // chama as rotinas que lidam com eventos na janela, no caso aqui interações do usuário com a janela
