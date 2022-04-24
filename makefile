@@ -2,7 +2,7 @@ OBJS = src/*.cpp src/glad/glad.c
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc
 CC = g++
-COMPILER_FLAGS = -w -g
+COMPILER_FLAGS = -w -g -std=c++11
 LINKER_FLAGS = -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
 OBJ_NAME = a.out
 

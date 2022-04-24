@@ -76,24 +76,23 @@ int main()
     //     0.5f, 0.5f, 1.0f
     // };
     
-    static float vertex1[] {
-        -0.75f, -0.5f, 1.0f,
-        -0.5f, 0.5f, 1.0f,
-        -0.25f, -0.5f, 1.0f        
-    };
-
-    static float vertex2[] {        
-        0.25f, -0.5f, 1.0f,
-        0.5f, 0.5f, 1.0f,
-        0.75f, -0.5f, 1.0f
-    };
+    static float vertex_data[2][9] {        
+        {
+            -0.75f, -0.5f, 1.0f,
+            -0.5f, 0.5f, 1.0f,
+            -0.25f, -0.5f, 1.0f
+        },
+        {
+            0.25f, -0.5f, 1.0f,
+            0.5f, 0.5f, 1.0f,
+            0.75f, -0.5f, 1.0f
+        }
+    };    
 
     static unsigned int elements[] {0, 1, 2, 1, 2, 3};
 
-    static unsigned int vao1;
-    static unsigned int vbo1;
-    static unsigned int vao2;
-    static unsigned int vbo2;
+    static unsigned int vao[2];    
+    static unsigned int vbo[2];        
     static unsigned int ebo;
     static unsigned int vert_shader_id;
     static unsigned int frag_shader_id;
@@ -106,28 +105,29 @@ int main()
 
 // ======================================================================================================
 
-    glGenVertexArrays(1, &vao1);
-    glBindVertexArray(vao1);
-
-    glGenBuffers(1, &vbo1);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo1);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex1), vertex1, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);    
-    glEnableVertexArrayAttrib(vao1, 0);
-    glBindVertexArray(0);
+    glGenVertexArrays(2, vao);
+    glGenBuffers(2, vbo);
 
 // ======================================================================================================
 
-    glGenVertexArrays(1, &vao2);
-    glBindVertexArray(vao2);
-
-    glGenBuffers(1, &vbo2);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo2);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex2), vertex2, GL_STATIC_DRAW);
+    glBindVertexArray(vao[0]);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data[0]), vertex_data[0], GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);    
-    glEnableVertexArrayAttrib(vao2, 0);
+    glEnableVertexArrayAttrib(vao[0], 0);
+    glBindVertexArray(0);
+
+// ======================================================================================================
+    
+    glBindVertexArray(vao[1]);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data[1]), vertex_data[1], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);    
+    glEnableVertexArrayAttrib(vao[1], 0);
     glBindVertexArray(0);
 
 // ======================================================================================================
@@ -203,10 +203,10 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(vao1);
+        glBindVertexArray(vao[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glBindVertexArray(vao2);
+        glBindVertexArray(vao[1]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);        
