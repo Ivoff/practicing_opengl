@@ -1,3 +1,5 @@
 /_extern
 /build
 /lib
+.vscode
+/include/glm

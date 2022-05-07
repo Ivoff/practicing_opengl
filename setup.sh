@@ -1,9 +1,13 @@
+!# /bin/bash
+
 GLAD_GL_VERSION=${GLAD_GL_VERSION:-4.6}
 GLAD_GL_PROFILE=${GLAD_GL_PROFILE:-core}
 
 GLFW_VERSION=${GLFW_VERSION:-3.3.2}
 
 PYTHON_PATH=${PYTHON_PATH:-python3}
+
+GLM_VERSION=${GLM_VERSION:-0.9.9.8}
 
 if [ "$1" = "reset"  ]; then
     
@@ -29,7 +33,13 @@ cd ./../../
 mkdir src/glad
 mv src/glad.c src/glad/glad.c
 
-wget "https://github.com/glfw/glfw/releases/download/$GLFW_VERSION/glfw-$GLFW_VERSION.zip" -P ./_extern
+wget "https://github.com/g-truc/glm/archive/refs/tags/$GLM_VERSION.zip" -O ./_extern/glm-$GLM_VERSION.zip
+cd ./_extern
+unzip ./glm-$GLM_VERSION.zip
+cp -r ./glm-$GLM_VERSION/glm ../include/
+cd ../
+
+wget "https://github.com/glfw/glfw/releases/download/$GLFW_VERSION/glfw-$GLFW_VERSION.zip" -O ./_extern/glfw-$GLFW_VERSION.zip
 cd ./_extern
 unzip glfw-$GLFW_VERSION.zip
 cd glfw-$GLFW_VERSION
