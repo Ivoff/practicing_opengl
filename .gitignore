@@ -3,3 +3,4 @@
 /lib
 .vscode
 /include/glm
+*.cpp

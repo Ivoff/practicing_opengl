@@ -13,7 +13,8 @@ struct Scene
     GLuint current_ebo;
     GLuint current_vbo;
     Camera* camera;
-    glm::mat4 model_mat;    
+    glm::mat4 model_mat;
+    glm::mat4 world_mat;
 
     float vertex_data[12]{
         -0.5f, -0.5f, 0.0f, 1.0f,

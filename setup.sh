@@ -39,6 +39,9 @@ unzip ./glm-$GLM_VERSION.zip
 cp -r ./glm-$GLM_VERSION/glm ../include/
 cd ../
 
+mkdir ./include/stb_image
+wget "https://raw.githubusercontent.com/nothings/stb/master/stb_image.h" -O ./include/stb_image/stb_image.h
+
 wget "https://github.com/glfw/glfw/releases/download/$GLFW_VERSION/glfw-$GLFW_VERSION.zip" -O ./_extern/glfw-$GLFW_VERSION.zip
 cd ./_extern
 unzip glfw-$GLFW_VERSION.zip

@@ -18,11 +18,23 @@
 #include <scene/scene.hpp>
 #include <utils/utils.cpp>
 
+struct MOUSE {
+    double last_x;
+    double last_y;
+    double cur_x;
+    double cur_y;
+};
+
+struct KEY {
+    int toggle[256];
+    int pressed[256];
+};
 
 struct WINDOW {
     int width;
     int height;
-    int toggle[256];
+    KEY key;
+    MOUSE mouse;
     GLFWwindow* window;    
 };
 
@@ -51,7 +63,8 @@ public:
     void m_setup();
     void m_render();
     void m_update(float delta_time);
-    void m_process_input();
+    static void m_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void m_window_resize(GLFWwindow* window, int width, int height);
     void m_destroy();
 };
 
