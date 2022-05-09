@@ -32,6 +32,11 @@ void ShaderProgram::m_setUniform(std::string uniform_name, int uniform_value)
     GLuint uniform = glGetUniformLocation(m_id, uniform_name.c_str());
     glUniform1i(uniform, uniform_value);
 }
+void ShaderProgram::m_setUniform(std::string uniform_name, GLuint uniform_value)
+{
+    GLuint uniform = glGetUniformLocation(m_id, uniform_name.c_str());
+    glUniform1i(uniform, uniform_value);
+}
 void ShaderProgram::m_setUniform(std::string uniform_name, float uniform_value)
 {
     GLuint uniform = glGetUniformLocation(m_id, uniform_name.c_str());

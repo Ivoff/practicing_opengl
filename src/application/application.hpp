@@ -17,6 +17,7 @@
 #include <camera/camera.hpp>
 #include <scene/scene.hpp>
 #include <utils/utils.cpp>
+#include <texture/texture.hpp>
 
 struct MOUSE {
     double last_x;

@@ -1,4 +1,12 @@
-OBJS = src/*.cpp src/glad/glad.c src/camera/camera.cpp src/application/application.cpp src/shader/shader.cpp src/scene/scene.cpp src/utils/*.cpp
+OBJS = 	src/*.cpp \
+		src/glad/glad.c \
+		src/camera/camera.cpp \
+		src/application/application.cpp \
+		src/shader/shader.cpp \
+		src/scene/scene.cpp \
+		src/utils/*.cpp \
+		src/texture/*.cpp
+
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc
 CC = g++

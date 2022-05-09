@@ -101,25 +101,43 @@ Application::~Application() {
 
 void Application::m_setup()
 {
+    glEnable(GL_DEPTH_TEST);
+
     glGenVertexArrays(1, &m_scene.current_vao);    
     glGenBuffers(1, &m_scene.current_vbo);
+    glGenBuffers(1, &m_scene.current_ebo);
 
     glBindVertexArray(m_scene.current_vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_scene.current_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_scene.vertex_data), m_scene.vertex_data, GL_DYNAMIC_DRAW);
 
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_scene.current_ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_scene.index_data), m_scene.index_data, GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(4*sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     m_scene.camera = new Camera(glm::radians(90.0f), 0.1f, 100.0f, m_window.width, m_window.height);
     m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));
     m_scene.world_mat = glm::mat4(1.0f);
 
+    m_scene.texture = new Texture("textures/wall.jpg", GL_TEXTURE_2D);
+    m_scene.texture->m_gen_tex(GL_RGB, GL_RGB, true);
+    m_scene.texture->m_set_filtering(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    m_scene.texture->m_set_filtering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    m_scene.texture->m_set_wrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
+    m_scene.texture->m_set_wrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);
+    m_scene.texture->m_activate(GL_TEXTURE0);
+
     GLuint vertex_shader = Shader::m_create("shaders/vertex.vert", GL_VERTEX_SHADER);
     GLuint fragment_shader = Shader::m_create("shaders/fragment.frag", GL_FRAGMENT_SHADER);     
     m_scene.current_program = new ShaderProgram({vertex_shader, fragment_shader});
     m_scene.current_program->m_use();
+    
+    m_scene.current_program->m_setUniform("texture0", m_scene.texture->m_tex_unit);
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);
     m_scene.current_program->m_setUniform("world_mat", m_scene.world_mat);
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
@@ -161,8 +179,9 @@ void Application::m_update(float delta_time)
 void Application::m_render()
 {
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*)0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void Application::m_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods)

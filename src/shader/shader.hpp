@@ -61,6 +61,7 @@ public:
     ShaderProgram(std::vector<GLuint> shaders);
     void m_setUniform(std::string uniform_name, glm::vec4& uniform_value);
     void m_setUniform(std::string uniform_name, int uniform_value);
+    void m_setUniform(std::string uniform_name, GLuint uniform_value);
     void m_setUniform(std::string uniform_name, float uniform_value);
     void m_setUniform(std::string uniform_name, glm::mat4& uniform_value);
     void m_destroy();
