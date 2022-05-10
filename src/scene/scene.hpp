@@ -15,8 +15,7 @@ struct Scene
     GLuint current_vbo;
     Camera* camera;
     Texture* texture;
-    glm::mat4 model_mat;
-    glm::mat4 world_mat;
+    glm::mat4 model_mat;    
 
     // CUBE
     float vertex_data[216] {

@@ -20,10 +20,12 @@
 #include <texture/texture.hpp>
 
 struct MOUSE {
-    double last_x;
-    double last_y;
+    float last_x;
+    float last_y;
     double cur_x;
     double cur_y;
+    bool is_first_mouse;
+    float sensitivity;
 };
 
 struct KEY {
@@ -65,7 +67,8 @@ public:
     void m_render();
     void m_update(float delta_time);
     static void m_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods);
-    static void m_window_resize(GLFWwindow* window, int width, int height);
+    static void m_mouse_input(GLFWwindow* window, double x, double y);
+    static void m_window_resize(GLFWwindow* window, int width, int height);    
     void m_destroy();
 };
 

@@ -13,7 +13,14 @@ Application::Application(int width, int height, const char* title, int frame_tar
         width, // width
         height, // height
         {0, 0}, // key
-        {0.0, 0.0, 0.0, 0.0}, // mouse
+        {   // mouse
+            0.0, 
+            0.0, 
+            0.0, 
+            0.0, 
+            true, 
+            0.1f
+        }, 
         nullptr // window
     }
 {
@@ -46,14 +53,19 @@ Application::Application(int width, int height, const char* title, int frame_tar
     
     glfwSetFramebufferSizeCallback(m_window.window, [](GLFWwindow *window, int width, int height){
         glViewport(0, 0, width, height);
-    });
-
-    glfwSetWindowUserPointer(m_window.window, this);
+    });    
 
     glfwSetKeyCallback(m_window.window, m_keyboard_input);
     
     glfwSetWindowSizeCallback(m_window.window, m_window_resize);
 
+    glfwSetInputMode(m_window.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(m_window.window, m_mouse_input);
+
+    m_window.mouse.last_x = m_window.width/2.0f;
+    m_window.mouse.last_y = m_window.height/2.0f;
+
+    glfwSetCursorPos(m_window.window, m_window.mouse.last_x, m_window.mouse.last_y);
 
     if (m_info.frame_target != 0) {
         m_info.min_fps_time = 1000 / m_info.frame_target;
@@ -62,6 +74,8 @@ Application::Application(int width, int height, const char* title, int frame_tar
     m_scene = Scene();
 
     m_info.is_running = true;
+
+    glfwSetWindowUserPointer(m_window.window, this);
 }
 
 void Application::m_pre_update()
@@ -121,8 +135,7 @@ void Application::m_setup()
     glEnableVertexAttribArray(1);
 
     m_scene.camera = new Camera(glm::radians(90.0f), 0.1f, 100.0f, m_window.width, m_window.height);
-    m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));
-    m_scene.world_mat = glm::mat4(1.0f);
+    m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));    
 
     m_scene.texture = new Texture("textures/wall.jpg", GL_TEXTURE_2D);
     m_scene.texture->m_gen_tex(GL_RGB, GL_RGB, true);
@@ -138,8 +151,7 @@ void Application::m_setup()
     m_scene.current_program->m_use();
     
     m_scene.current_program->m_setUniform("texture0", m_scene.texture->m_tex_unit);
-    m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);
-    m_scene.current_program->m_setUniform("world_mat", m_scene.world_mat);
+    m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
 }
@@ -148,32 +160,28 @@ void Application::m_update(float delta_time)
 {
     if (m_window.key.pressed['w'])
     {
-        m_scene.world_mat = glm::translate(m_scene.world_mat, glm::vec3(0, 0, -0.05f));
+        m_scene.camera->m_position += delta_time * 0.5f * m_scene.camera->m_front;
     }
     if (m_window.key.pressed['s'])
     {
-        m_scene.world_mat = glm::translate(m_scene.world_mat, glm::vec3(0, 0, 0.05f));
+        m_scene.camera->m_position -= delta_time * 0.5f * m_scene.camera->m_front;
     }
     if (m_window.key.pressed['a'])
     {
-        m_scene.world_mat = glm::translate(m_scene.world_mat, glm::vec3(0.05f, 0, 0));        
+        m_scene.camera->m_position -= delta_time * 0.5f * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
     }
     if (m_window.key.pressed['d'])
     {
-        m_scene.world_mat = glm::translate(m_scene.world_mat, glm::vec3(-0.05f, 0, 0));        
+        m_scene.camera->m_position += delta_time * 0.5f * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
     }
 
-    glfwGetCursorPos(m_window.window, &m_window.mouse.cur_x, &m_window.mouse.cur_y);
-        
-    m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(1.0f), glm::vec3(0, 1, 0));    
-    m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);
-    m_scene.current_program->m_setUniform("world_mat", m_scene.world_mat);
+    m_scene.camera->m_look_at(m_scene.camera->m_front);
+
+    // m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(1.0f), glm::vec3(0, 1, 0));
+    m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-    m_scene.current_program->m_setUniform("intensity", fabs(cos((float)glfwGetTime())));
-
-    m_window.mouse.last_x = m_window.mouse.cur_x;
-    m_window.mouse.last_y = m_window.mouse.cur_y;
+    m_scene.current_program->m_setUniform("intensity", fabs(cos((float)glfwGetTime())));    
 }
 
 void Application::m_render()
@@ -186,12 +194,17 @@ void Application::m_render()
 
 void Application::m_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    Application* app = (Application*)glfwGetWindowUserPointer(window);
+    Application* app = (Application*)glfwGetWindowUserPointer(window);    
 
-    if(key ==  GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if(scancode ==  9 && action == GLFW_PRESS && !app->m_window.key.toggle[Utils::scan_to_ascii_code(scancode)])
     {
-        app->m_info.is_running = false;
-        glfwSetWindowShouldClose(window, true);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        app->m_window.key.toggle[Utils::scan_to_ascii_code(scancode)] = true;
+    }
+    else if (scancode ==  9 && action == GLFW_PRESS && app->m_window.key.toggle[Utils::scan_to_ascii_code(scancode)])
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        app->m_window.key.toggle[Utils::scan_to_ascii_code(scancode)] = false;
     }
 
     // =========================================================================================================================================================   
@@ -204,59 +217,84 @@ void Application::m_keyboard_input(GLFWwindow* window, int key, int scancode, in
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         app->m_window.key.toggle['z'] = false;
-    }
-    
-    // =========================================================================================================================================================
-    if (key == GLFW_KEY_M && action == GLFW_PRESS && !app->m_window.key.toggle['m'])
-    {
-        app->m_window.key.toggle['m'] = true;
-    }
-    else if ((key == GLFW_KEY_M && action == GLFW_PRESS) && app->m_window.key.toggle['m'])
-    {
-        app->m_window.key.toggle['m'] = false;
-    }
+    }            
 
-    // =========================================================================================================================================================
-    if (key == GLFW_KEY_W && (action == GLFW_REPEAT || action == GLFW_PRESS))
+    // =========================================================================================================================================================    
+    if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
         app->m_window.key.pressed['w'] = true;        
-    }
+    } 
     else if (key == GLFW_KEY_W && action == GLFW_RELEASE)
     {
         app->m_window.key.pressed['w'] = false;
     }
 
-    if (key == GLFW_KEY_S && (action == GLFW_REPEAT || action == GLFW_PRESS))
+    if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
-        app->m_window.key.pressed['s'] = true;
-    }
+        app->m_window.key.pressed['s'] = true;        
+    } 
     else if (key == GLFW_KEY_S && action == GLFW_RELEASE)
     {
         app->m_window.key.pressed['s'] = false;
     }
 
-    if (key == GLFW_KEY_A && (action == GLFW_REPEAT || action == GLFW_PRESS))
+    if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
-        app->m_window.key.pressed['a'] = true;
-    }
+        app->m_window.key.pressed['a'] = true;        
+    } 
     else if (key == GLFW_KEY_A && action == GLFW_RELEASE)
     {
         app->m_window.key.pressed['a'] = false;
     }
 
-    if (key == GLFW_KEY_D && (action == GLFW_REPEAT || action == GLFW_PRESS))
+    if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
-        app->m_window.key.pressed['d'] = true;
-    }
+        app->m_window.key.pressed['d'] = true;        
+    } 
     else if (key == GLFW_KEY_D && action == GLFW_RELEASE)
     {
         app->m_window.key.pressed['d'] = false;
+    }   
+}
+
+void Application::m_mouse_input(GLFWwindow* window, double x, double y)
+{
+    Application* app = (Application*) glfwGetWindowUserPointer(window);
+    float* last_x = &app->m_window.mouse.last_x;
+    float* last_y = &app->m_window.mouse.last_y;
+    double* cur_x = &app->m_window.mouse.cur_x;
+    double* cur_y = &app->m_window.mouse.cur_y;
+
+    if (app->m_window.mouse.is_first_mouse)
+    {
+        // posiciona o mouse no meio da tela no primeiro frame
+        *last_x = static_cast<float>(*cur_x);
+        *last_y = static_cast<float>(*cur_y);        
+        app->m_window.mouse.is_first_mouse = false;
     }
+
+    *cur_x = x;
+    *cur_y = y;
+
+    app->m_scene.camera->m_yaw += (static_cast<float>(*cur_x) - *last_x) * app->m_window.mouse.sensitivity;
+    app->m_scene.camera->m_pitch += (*last_y - static_cast<float>(*cur_y)) * app->m_window.mouse.sensitivity;
+
+    *last_x = static_cast<float>(*cur_x);
+    *last_y = static_cast<float>(*cur_y);
+    
+    if (app->m_scene.camera->m_pitch > 89.0f)
+        app->m_scene.camera->m_pitch =  89.0f;
+    
+    if (app->m_scene.camera->m_pitch < -89.0f)
+        app->m_scene.camera->m_pitch = -89.0f;
+
+    app->m_scene.camera->m_front_dir(app->m_scene.camera->m_yaw, app->m_scene.camera->m_pitch);
+    app->m_scene.camera->m_look_at(app->m_scene.camera->m_front);
 }
 
 void Application::m_window_resize(GLFWwindow* window, int width, int height)
 {
-    Application* app = (Application*)glfwGetWindowUserPointer(window);
+    Application* app = (Application*) glfwGetWindowUserPointer(window);
     
     app->m_scene.camera->m_update(glm::radians(90.0f), 0.1f, 100, width, height);
 }

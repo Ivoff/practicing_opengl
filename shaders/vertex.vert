@@ -7,7 +7,6 @@ out vec4 v_color;
 out vec2 tex_coord;
 
 uniform mat4 model_mat;
-uniform mat4 world_mat;
 uniform mat4 view_mat;
 uniform mat4 proj_mat;
 
@@ -28,5 +27,5 @@ void main()
     
     tex_coord = p_tex_coord;
 
-    gl_Position = proj_mat * view_mat * world_mat * model_mat * vert_data;    
+    gl_Position = proj_mat * view_mat * model_mat * vert_data;
 }
