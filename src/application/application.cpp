@@ -47,10 +47,10 @@ Application::Application(int width, int height, const char* title, int frame_tar
         glViewport(0, 0, width, height);
     });    
 
-    glfwSetKeyCallback(m_window.window, m_keyboard_input);
+    m_keyboard = new Keyboard(m_window.window);
+    glfwSetKeyCallback(m_window.window, m_KeyboardCallback);
     
     glfwSetWindowSizeCallback(m_window.window, m_window_resize);
-
 
     m_mouse = new Mouse(m_window.width, m_window.height, 0.1f);
     glfwSetInputMode(m_window.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -149,24 +149,24 @@ void Application::m_setup()
 
 void Application::m_update(float delta_time)
 {
-    if (m_window.key.pressed['w'])
+    if (m_keyboard->m_Pressed('w'))
     {
         m_scene.camera->m_position += delta_time * 0.5f * m_scene.camera->m_front;
     }
-    if (m_window.key.pressed['s'])
+    if (m_keyboard->m_Pressed('s'))
     {
         m_scene.camera->m_position -= delta_time * 0.5f * m_scene.camera->m_front;
     }
-    if (m_window.key.pressed['a'])
+    if (m_keyboard->m_Pressed('a'))
     {
         m_scene.camera->m_position -= delta_time * 0.5f * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
     }
-    if (m_window.key.pressed['d'])
+    if (m_keyboard->m_Pressed('d'))
     {
         m_scene.camera->m_position += delta_time * 0.5f * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
     }
 
-    m_scene.camera->m_look_at(m_scene.camera->m_front);
+    m_scene.camera->m_LookAt(m_scene.camera->m_front);
 
     m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(1.0f), glm::vec3(0, 1, 0));
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
@@ -183,69 +183,10 @@ void Application::m_render()
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void Application::m_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods)
+void Application::m_KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    Application* app = (Application*)glfwGetWindowUserPointer(window);    
-
-    if(scancode ==  9 && action == GLFW_PRESS && !app->m_window.key.toggle[Utils::scan_to_ascii_code(scancode)])
-    {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        app->m_window.key.toggle[Utils::scan_to_ascii_code(scancode)] = true;
-    }
-    else if (scancode ==  9 && action == GLFW_PRESS && app->m_window.key.toggle[Utils::scan_to_ascii_code(scancode)])
-    {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        app->m_window.key.toggle[Utils::scan_to_ascii_code(scancode)] = false;
-    }
-
-    // =========================================================================================================================================================   
-    if ((key == GLFW_KEY_Z && action == GLFW_PRESS) && !app->m_window.key.toggle['z'])
-    {        
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        app->m_window.key.toggle['z'] = true;                
-    }
-    else if ((key == GLFW_KEY_Z && action == GLFW_PRESS) && app->m_window.key.toggle['z'])
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        app->m_window.key.toggle['z'] = false;
-    }            
-
-    // =========================================================================================================================================================    
-    if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        app->m_window.key.pressed['w'] = true;        
-    } 
-    else if (key == GLFW_KEY_W && action == GLFW_RELEASE)
-    {
-        app->m_window.key.pressed['w'] = false;
-    }
-
-    if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        app->m_window.key.pressed['s'] = true;        
-    } 
-    else if (key == GLFW_KEY_S && action == GLFW_RELEASE)
-    {
-        app->m_window.key.pressed['s'] = false;
-    }
-
-    if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        app->m_window.key.pressed['a'] = true;        
-    } 
-    else if (key == GLFW_KEY_A && action == GLFW_RELEASE)
-    {
-        app->m_window.key.pressed['a'] = false;
-    }
-
-    if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        app->m_window.key.pressed['d'] = true;        
-    } 
-    else if (key == GLFW_KEY_D && action == GLFW_RELEASE)
-    {
-        app->m_window.key.pressed['d'] = false;
-    }   
+    Application& app = *((Application*) glfwGetWindowUserPointer(window));
+    app.m_keyboard->m_Input(*(app.m_keyboard), key, scancode, action, mods);
 }
 
 void Application::m_MouseCallback(GLFWwindow* window, double x, double y)
@@ -258,7 +199,7 @@ void Application::m_window_resize(GLFWwindow* window, int width, int height)
 {
     Application* app = (Application*) glfwGetWindowUserPointer(window);
     
-    app->m_scene.camera->m_update(glm::radians(90.0f), 0.1f, 100, width, height);
+    app->m_scene.camera->m_UpdateProjMat(glm::radians(90.0f), 0.1f, 100, width, height);
 }
 
 void Application::m_destroy()

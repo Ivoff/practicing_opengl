@@ -22,9 +22,9 @@ struct Camera
 
     Camera(glm::vec3 position, float fov, float near, float far, int width, int height);
     Camera(float fov, float near, float far, int width, int height);
-    void m_update(float fov, float near, float far, int width, int height);
-    void m_look_at(glm::vec3 direction);
-    void m_front_dir(float yaw, float pitch);
+    void m_UpdateProjMat(float fov, float near, float far, int width, int height);
+    void m_SetFrontDir(float yaw, float pitch);
+    void m_LookAt(glm::vec3 direction);
 };
 
 #endif

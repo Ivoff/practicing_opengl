@@ -24,6 +24,6 @@ void Mouse::m_Input(Mouse& mouse, Camera& camera, double x, double y)
     if (camera.m_pitch < -89.0f)
         camera.m_pitch = -89.0f;
 
-    camera.m_front_dir(camera.m_yaw, camera.m_pitch);
-    camera.m_look_at(camera.m_front);
+    camera.m_SetFrontDir(camera.m_yaw, camera.m_pitch);
+    camera.m_LookAt(camera.m_front);
 }

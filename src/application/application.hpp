@@ -19,6 +19,7 @@
 #include <utils/utils.cpp>
 #include <texture/texture.hpp>
 #include <application/mouse/mouse.hpp>
+#include <application/keyboard/keyboard.hpp>
 
 struct KEY {
     int toggle[256];
@@ -50,6 +51,7 @@ public:
     WINDOW m_window;
     Scene m_scene;
     Mouse* m_mouse;
+    Keyboard* m_keyboard;
 
     Application(int width, int height, const char* title, int frame_target);
     void m_pre_update();
@@ -57,8 +59,8 @@ public:
     ~Application();    
     void m_setup();
     void m_render();
-    void m_update(float delta_time);
-    static void m_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods);
+    void m_update(float delta_time);    
+    static void m_KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void m_MouseCallback(GLFWwindow* window, double x, double y);
     static void m_window_resize(GLFWwindow* window, int width, int height);    
     void m_destroy();

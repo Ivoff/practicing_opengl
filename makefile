@@ -3,6 +3,7 @@ OBJS = 	src/*.cpp \
 		src/camera/camera.cpp \
 		src/application/application.cpp \
 		src/application/mouse/mouse.cpp \
+		src/application/keyboard/keyboard.cpp \
 		src/shader/shader.cpp \
 		src/scene/scene.cpp \
 		src/utils/*.cpp \
