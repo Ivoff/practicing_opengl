@@ -8,12 +8,6 @@ Application::Application(int width, int height, const char* title, int frame_tar
         0.0, // last_frame_time
         NULL, // min_fps_time
         0 // fps
-    },
-    m_window {
-        width, // width
-        height, // height
-        {0, 0}, // key       
-        nullptr // window
     }
 {
     if(!glfwInit()) {
@@ -25,14 +19,19 @@ Application::Application(int width, int height, const char* title, int frame_tar
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    m_window.window = glfwCreateWindow(m_window.width, m_window.height, m_info.title, NULL, NULL);        
-    if (!m_window.window) {
+    m_window = new Window(
+        glfwCreateWindow(width, height, m_info.title, NULL, NULL),
+        width, 
+        height
+    );
+    
+    if (!m_window->m_glfw_window) {
         std::cerr << "Error during window creation" << std::endl;
         glfwTerminate();
         std::exit(EXIT_FAILURE);
     }        
 
-    glfwMakeContextCurrent(m_window.window);                        
+    glfwMakeContextCurrent(m_window->m_glfw_window);                        
 
     if(!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)){
         std::cerr << "Error while loading OpenGL functions";
@@ -40,23 +39,23 @@ Application::Application(int width, int height, const char* title, int frame_tar
         std::exit(EXIT_FAILURE);
     }                
 
-    glfwGetFramebufferSize(m_window.window, &m_window.width, &m_window.height);
-    glViewport(0, 0, m_window.width, m_window.height);
+    glfwGetFramebufferSize(m_window->m_glfw_window, &m_window->m_width, &m_window->m_height);
+    glViewport(0, 0, m_window->m_width, m_window->m_height);
     
-    glfwSetFramebufferSizeCallback(m_window.window, [](GLFWwindow *window, int width, int height){
+    glfwSetFramebufferSizeCallback(m_window->m_glfw_window, [](GLFWwindow *window, int width, int height){
         glViewport(0, 0, width, height);
     });    
 
-    m_keyboard = new Keyboard(m_window.window);
-    glfwSetKeyCallback(m_window.window, m_KeyboardCallback);
+    m_keyboard = new Keyboard(m_window->m_glfw_window);
+    glfwSetKeyCallback(m_window->m_glfw_window, m_KeyboardCallback);
     
-    glfwSetWindowSizeCallback(m_window.window, m_window_resize);
+    glfwSetWindowSizeCallback(m_window->m_glfw_window, m_WindowResizeCallback);
 
-    m_mouse = new Mouse(m_window.width, m_window.height, 0.1f);
-    glfwSetInputMode(m_window.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(m_window.window, m_MouseCallback);    
+    m_mouse = new Mouse(m_window->m_width, m_window->m_height, 0.1f);
+    glfwSetInputMode(m_window->m_glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(m_window->m_glfw_window, m_MouseCallback);
 
-    // glfwSetCursorPos(m_window.window, m_window.mouse.last_x, m_window.mouse.last_y);
+    // glfwSetCursorPos(m_window->m_glfw_window, m_window->m_width/2.0, m_window->m_height/2.0);
 
     if (m_info.frame_target != 0) {
         m_info.min_fps_time = 1000 / m_info.frame_target;
@@ -66,7 +65,7 @@ Application::Application(int width, int height, const char* title, int frame_tar
 
     m_info.is_running = true;
 
-    glfwSetWindowUserPointer(m_window.window, this);
+    glfwSetWindowUserPointer(m_window->m_glfw_window, this);
 }
 
 void Application::m_pre_update()
@@ -91,7 +90,7 @@ void Application::m_pre_process_input()
 {
     glfwPollEvents();
 
-    if (glfwWindowShouldClose(m_window.window))
+    if (glfwWindowShouldClose(m_window->m_glfw_window))
         m_info.is_running = false;
     // else
         // TODO mouse input
@@ -125,7 +124,7 @@ void Application::m_setup()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(4*sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    m_scene.camera = new Camera(glm::radians(90.0f), 0.1f, 100.0f, m_window.width, m_window.height);
+    m_scene.camera = new Camera(glm::radians(90.0f), 0.1f, 100.0f, m_window->m_width, m_window->m_height);
     m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));    
 
     m_scene.texture = new Texture("textures/wall.jpg", GL_TEXTURE_2D);
@@ -195,7 +194,7 @@ void Application::m_MouseCallback(GLFWwindow* window, double x, double y)
     app.m_mouse->m_Input(*(app.m_mouse), *(app.m_scene.camera), x, y);
 }
 
-void Application::m_window_resize(GLFWwindow* window, int width, int height)
+void Application::m_WindowResizeCallback(GLFWwindow* window, int width, int height)
 {
     Application* app = (Application*) glfwGetWindowUserPointer(window);
     

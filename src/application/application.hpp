@@ -20,23 +20,12 @@
 #include <texture/texture.hpp>
 #include <application/mouse/mouse.hpp>
 #include <application/keyboard/keyboard.hpp>
+#include <application/window/window.hpp>
 
-struct KEY {
-    int toggle[256];
-    int pressed[256];
-};
-
-struct WINDOW {
-    int width;
-    int height;
-    KEY key;
-    GLFWwindow* window;    
-};
-
-struct APP {    
+struct APP {
     bool is_running;
     const char* title;
-    int frame_target;    
+    int frame_target;
     unsigned int last_frame_time;
     unsigned int min_fps_time;
     unsigned int fps;
@@ -48,7 +37,7 @@ private:
     
 public:    
     APP m_info;
-    WINDOW m_window;
+    Window* m_window;
     Scene m_scene;
     Mouse* m_mouse;
     Keyboard* m_keyboard;
@@ -62,7 +51,7 @@ public:
     void m_update(float delta_time);    
     static void m_KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void m_MouseCallback(GLFWwindow* window, double x, double y);
-    static void m_window_resize(GLFWwindow* window, int width, int height);    
+    static void m_WindowResizeCallback(GLFWwindow* window, int width, int height);    
     void m_destroy();
 };
 

@@ -20,7 +20,7 @@ int main()
         app.m_pre_update();
         app.m_render();
 
-        glfwSwapBuffers(app.m_window.window);        
+        glfwSwapBuffers(app.m_window->m_glfw_window);        
     }    
 
     return 0;

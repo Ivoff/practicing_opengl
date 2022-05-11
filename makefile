@@ -4,6 +4,7 @@ OBJS = 	src/*.cpp \
 		src/application/application.cpp \
 		src/application/mouse/mouse.cpp \
 		src/application/keyboard/keyboard.cpp \
+		src/application/window/window.cpp \
 		src/shader/shader.cpp \
 		src/scene/scene.cpp \
 		src/utils/*.cpp \
