@@ -18,15 +18,7 @@
 #include <scene/scene.hpp>
 #include <utils/utils.cpp>
 #include <texture/texture.hpp>
-
-struct MOUSE {
-    float last_x;
-    float last_y;
-    double cur_x;
-    double cur_y;
-    bool is_first_mouse;
-    float sensitivity;
-};
+#include <application/mouse/mouse.hpp>
 
 struct KEY {
     int toggle[256];
@@ -37,7 +29,6 @@ struct WINDOW {
     int width;
     int height;
     KEY key;
-    MOUSE mouse;
     GLFWwindow* window;    
 };
 
@@ -58,6 +49,7 @@ public:
     APP m_info;
     WINDOW m_window;
     Scene m_scene;
+    Mouse* m_mouse;
 
     Application(int width, int height, const char* title, int frame_target);
     void m_pre_update();
@@ -67,7 +59,7 @@ public:
     void m_render();
     void m_update(float delta_time);
     static void m_keyboard_input(GLFWwindow* window, int key, int scancode, int action, int mods);
-    static void m_mouse_input(GLFWwindow* window, double x, double y);
+    static void m_MouseCallback(GLFWwindow* window, double x, double y);
     static void m_window_resize(GLFWwindow* window, int width, int height);    
     void m_destroy();
 };

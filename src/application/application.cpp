@@ -12,15 +12,7 @@ Application::Application(int width, int height, const char* title, int frame_tar
     m_window {
         width, // width
         height, // height
-        {0, 0}, // key
-        {   // mouse
-            0.0, 
-            0.0, 
-            0.0, 
-            0.0, 
-            true, 
-            0.1f
-        }, 
+        {0, 0}, // key       
         nullptr // window
     }
 {
@@ -59,13 +51,12 @@ Application::Application(int width, int height, const char* title, int frame_tar
     
     glfwSetWindowSizeCallback(m_window.window, m_window_resize);
 
+
+    m_mouse = new Mouse(m_window.width, m_window.height, 0.1f);
     glfwSetInputMode(m_window.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(m_window.window, m_mouse_input);
+    glfwSetCursorPosCallback(m_window.window, m_MouseCallback);    
 
-    m_window.mouse.last_x = m_window.width/2.0f;
-    m_window.mouse.last_y = m_window.height/2.0f;
-
-    glfwSetCursorPos(m_window.window, m_window.mouse.last_x, m_window.mouse.last_y);
+    // glfwSetCursorPos(m_window.window, m_window.mouse.last_x, m_window.mouse.last_y);
 
     if (m_info.frame_target != 0) {
         m_info.min_fps_time = 1000 / m_info.frame_target;
@@ -177,7 +168,7 @@ void Application::m_update(float delta_time)
 
     m_scene.camera->m_look_at(m_scene.camera->m_front);
 
-    // m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(1.0f), glm::vec3(0, 1, 0));
+    m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(1.0f), glm::vec3(0, 1, 0));
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
@@ -257,39 +248,10 @@ void Application::m_keyboard_input(GLFWwindow* window, int key, int scancode, in
     }   
 }
 
-void Application::m_mouse_input(GLFWwindow* window, double x, double y)
+void Application::m_MouseCallback(GLFWwindow* window, double x, double y)
 {
-    Application* app = (Application*) glfwGetWindowUserPointer(window);
-    float* last_x = &app->m_window.mouse.last_x;
-    float* last_y = &app->m_window.mouse.last_y;
-    double* cur_x = &app->m_window.mouse.cur_x;
-    double* cur_y = &app->m_window.mouse.cur_y;
-
-    if (app->m_window.mouse.is_first_mouse)
-    {
-        // posiciona o mouse no meio da tela no primeiro frame
-        *last_x = static_cast<float>(*cur_x);
-        *last_y = static_cast<float>(*cur_y);        
-        app->m_window.mouse.is_first_mouse = false;
-    }
-
-    *cur_x = x;
-    *cur_y = y;
-
-    app->m_scene.camera->m_yaw += (static_cast<float>(*cur_x) - *last_x) * app->m_window.mouse.sensitivity;
-    app->m_scene.camera->m_pitch += (*last_y - static_cast<float>(*cur_y)) * app->m_window.mouse.sensitivity;
-
-    *last_x = static_cast<float>(*cur_x);
-    *last_y = static_cast<float>(*cur_y);
-    
-    if (app->m_scene.camera->m_pitch > 89.0f)
-        app->m_scene.camera->m_pitch =  89.0f;
-    
-    if (app->m_scene.camera->m_pitch < -89.0f)
-        app->m_scene.camera->m_pitch = -89.0f;
-
-    app->m_scene.camera->m_front_dir(app->m_scene.camera->m_yaw, app->m_scene.camera->m_pitch);
-    app->m_scene.camera->m_look_at(app->m_scene.camera->m_front);
+    Application& app = *((Application*) glfwGetWindowUserPointer(window));
+    app.m_mouse->m_Input(*(app.m_mouse), *(app.m_scene.camera), x, y);
 }
 
 void Application::m_window_resize(GLFWwindow* window, int width, int height)

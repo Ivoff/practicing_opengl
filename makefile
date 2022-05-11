@@ -2,6 +2,7 @@ OBJS = 	src/*.cpp \
 		src/glad/glad.c \
 		src/camera/camera.cpp \
 		src/application/application.cpp \
+		src/application/mouse/mouse.cpp \
 		src/shader/shader.cpp \
 		src/scene/scene.cpp \
 		src/utils/*.cpp \
