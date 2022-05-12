@@ -80,10 +80,10 @@ void Application::m_pre_update()
 
     float current_delta = Utils::ticks() - m_info.last_frame_time;
     current_delta = (current_delta > 0.05f) ? 0.05f : current_delta;
-            
+
     m_update(current_delta);
 
-    m_info.last_frame_time = Utils::ticks();
+    m_info.last_frame_time = Utils::ticks();    
 }
 
 void Application::m_pre_process_input()
@@ -114,18 +114,23 @@ void Application::m_setup()
     glBindVertexArray(m_scene.current_vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_scene.current_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_scene.vertex_data), m_scene.vertex_data, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_scene.vertex_data), m_scene.vertex_data, GL_DYNAMIC_DRAW);    
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_scene.current_ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_scene.index_data), m_scene.index_data, GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+    // vertex_pos pointer
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(4*sizeof(float)));
+    // uv_coords pointer
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(4*sizeof(float)));
     glEnableVertexAttribArray(1);
+    // normal pointer
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(6*sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     m_scene.camera = new Camera(glm::radians(90.0f), 0.1f, 100.0f, m_window->m_width, m_window->m_height);
-    m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));    
+    m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));
+    m_scene.lamp_color = glm::vec3(1.0f, 1.0f, 1.0f);
+    m_scene.lamp_pos = glm::vec3(-2.0f, 2.0f, -2.0f);
+    glm::mat3 normal_mat = glm::mat3(glm::transpose(glm::inverse(m_scene.model_mat)));
 
     m_scene.texture = new Texture("textures/wall.jpg", GL_TEXTURE_2D);
     m_scene.texture->m_gen_tex(GL_RGB, GL_RGB, true);
@@ -144,6 +149,10 @@ void Application::m_setup()
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
+    m_scene.current_program->m_setUniform("normal_mat", normal_mat);
+    m_scene.current_program->m_setUniform("light_pos", m_scene.lamp_pos);
+    m_scene.current_program->m_setUniform("light_color", m_scene.lamp_color);
+    m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
 }
 
 void Application::m_update(float delta_time)
@@ -167,11 +176,12 @@ void Application::m_update(float delta_time)
 
     m_scene.camera->m_LookAt(m_scene.camera->m_front);
 
-    m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(1.0f), glm::vec3(0, 1, 0));
+    // m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(delta_time*5.0f), glm::vec3(0, 1, 0));    
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
-    m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-    m_scene.current_program->m_setUniform("intensity", fabs(cos((float)glfwGetTime())));    
+    m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);    
+    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);    
+    m_scene.current_program->m_setUniform("light_pos", m_scene.lamp_pos);
+    m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
 }
 
 void Application::m_render()

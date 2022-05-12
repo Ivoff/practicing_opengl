@@ -27,6 +27,11 @@ void ShaderProgram::m_setUniform(std::string uniform_name, glm::vec4& uniform_va
     GLuint uniform = glGetUniformLocation(m_id, uniform_name.c_str());
     glUniform4f(uniform, uniform_value.x, uniform_value.y, uniform_value.z, uniform_value.w);
 }
+void ShaderProgram::m_setUniform(std::string uniform_name, glm::vec3& uniform_value)
+{
+    GLuint uniform = glGetUniformLocation(m_id, uniform_name.c_str());
+    glUniform3f(uniform, uniform_value.x, uniform_value.y, uniform_value.z);
+}
 void ShaderProgram::m_setUniform(std::string uniform_name, int uniform_value)
 {
     GLuint uniform = glGetUniformLocation(m_id, uniform_name.c_str());
@@ -46,6 +51,12 @@ void ShaderProgram::m_setUniform(std::string uniform_name, glm::mat4& uniform_va
 {
     GLuint uniform = glGetUniformLocation(m_id, uniform_name.c_str());
     glUniformMatrix4fv(uniform, 1, GL_FALSE, &uniform_value[0][0]);
+}
+
+void ShaderProgram::m_setUniform(std::string uniform_name, glm::mat3& uniform_value)
+{
+    GLuint uniform = glGetUniformLocation(m_id, uniform_name.c_str());
+    glUniformMatrix3fv(uniform, 1, GL_FALSE, &uniform_value[0][0]);
 }
 
 void ShaderProgram::m_destroy()
