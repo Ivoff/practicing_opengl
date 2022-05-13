@@ -6,6 +6,8 @@
 #include <texture/texture.hpp>
 #include <vector>
 #include <unordered_map>
+#include <material/material.hpp>
+#include <light/light.hpp>
 
 struct Scene
 {
@@ -16,8 +18,8 @@ struct Scene
     Camera* camera;
     Texture* texture;
     glm::mat4 model_mat;
-    glm::vec3 lamp_pos;
-    glm::vec3 lamp_color;
+    Light* light;    
+    Material* material;
 
     // CUBE
     float vertex_data[324] {

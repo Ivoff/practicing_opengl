@@ -1,28 +1,41 @@
-#version 450 core
+#version 460 core
 
-in vec2 tex_coord;
+struct Material
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+
+struct Light
+{
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;    
+};
+
 in vec3 frag_pos;
 in vec3 normal;
 
-out vec4 f_color;
+out vec4 frag_color;
 
-uniform sampler2D texture0;
-uniform vec3 light_pos;
-uniform vec3 light_color;
 uniform vec3 camera_pos;
 
+uniform Material material;
+uniform Light light;
+
 void main() 
-{        
-    vec3 light_dir = normalize(light_pos - frag_pos);
-    vec3 diffuse = max(dot(light_dir, normal), 0.0f) * light_color;
+{
+    vec3 ambient = light.ambient * material.ambient;
 
-    float specular_intensity = 0.5f;
-    vec3 view_dir = normalize(camera_pos - frag_pos);
-    vec3 reflect_dir = reflect(-light_dir, normal);
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0f), 32);
-    vec3 specular = spec * specular_intensity * light_color;
+    vec3 light_dir = normalize(light.position - frag_pos);
+    vec3 diffuse = max(dot(light_dir, normal), 0.0f) * light.diffuse * material.diffuse;
     
-    vec3 f_intensity = light_color * (diffuse + specular);
+    vec3 view_dir = normalize(camera_pos - frag_pos);
+    vec3 reflect_dir = reflect(-light_dir, normal);    
+    vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * material.specular * light.specular;        
 
-    f_color = texture(texture0, tex_coord) * vec4(f_intensity, 1.0f);
+    frag_color = vec4(ambient + diffuse + specular, 1.0f);
 }

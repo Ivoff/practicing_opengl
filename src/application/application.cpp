@@ -58,6 +58,7 @@ Application::Application(int width, int height, const char* title, int frame_tar
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     m_imgui_io = &ImGui::GetIO();
+    m_imgui_io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(m_window->m_glfw_window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
@@ -132,31 +133,41 @@ void Application::m_setup()
 
     m_scene.camera = new Camera(glm::radians(90.0f), 0.1f, 100.0f, m_window->m_width, m_window->m_height);
     m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));
-    m_scene.lamp_color = glm::vec3(1.0f, 1.0f, 1.0f);
-    m_scene.lamp_pos = glm::vec3(-2.0f, 2.0f, -2.0f);
-    glm::mat3 normal_mat = glm::mat3(glm::transpose(glm::inverse(m_scene.model_mat)));
-
-    m_scene.texture = new Texture("textures/wall.jpg", GL_TEXTURE_2D);
-    m_scene.texture->m_gen_tex(GL_RGB, GL_RGB, true);
-    m_scene.texture->m_set_filtering(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    m_scene.texture->m_set_filtering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    m_scene.texture->m_set_wrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
-    m_scene.texture->m_set_wrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);
-    m_scene.texture->m_activate(GL_TEXTURE0);
+    m_scene.light = new Light(
+        glm::vec3(-2.0f, 2.0f, -2.0f),
+        glm::vec3(0.2f, 0.2f, 0.2f),
+        glm::vec3(0.5f, 0.5f, 0.5f),
+        glm::vec3(1.0f, 1.0f, 1.0f) 
+    );
+    m_scene.material = new Material(
+        glm::vec3(0.7f, 0.5f, 0.65f),
+        glm::vec3(0.7f, 0.5f, 0.65f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        32.0f
+    );
+    glm::mat3 normal_mat = glm::mat3(glm::transpose(glm::inverse(m_scene.model_mat)));        
 
     GLuint vertex_shader = Shader::m_create("shaders/vertex.vert", GL_VERTEX_SHADER);
     GLuint fragment_shader = Shader::m_create("shaders/fragment.frag", GL_FRAGMENT_SHADER);     
     m_scene.current_program = new ShaderProgram({vertex_shader, fragment_shader});
     m_scene.current_program->m_use();
-    
-    m_scene.current_program->m_setUniform("texture0", m_scene.texture->m_tex_unit);
+        
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
     m_scene.current_program->m_setUniform("normal_mat", normal_mat);
-    m_scene.current_program->m_setUniform("light_pos", m_scene.lamp_pos);
-    m_scene.current_program->m_setUniform("light_color", m_scene.lamp_color);
+
     m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
+
+    m_scene.current_program->m_setUniform("light.position", m_scene.light->m_position);
+    m_scene.current_program->m_setUniform("light.ambient", m_scene.light->m_ambient);
+    m_scene.current_program->m_setUniform("light.diffuse", m_scene.light->m_diffuse);
+    m_scene.current_program->m_setUniform("light.specular", m_scene.light->m_specular);
+
+    m_scene.current_program->m_setUniform("material.ambient", m_scene.material->m_ambient);
+    m_scene.current_program->m_setUniform("material.diffuse", m_scene.material->m_diffuse);
+    m_scene.current_program->m_setUniform("material.specular", m_scene.material->m_specular);
+    m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
 }
 
 void Application::m_update(float delta_time)
@@ -191,21 +202,30 @@ void Application::m_update(float delta_time)
     // m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(delta_time*5.0f), glm::vec3(0, 1, 0));
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);    
-    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);    
-    m_scene.current_program->m_setUniform("light_pos", m_scene.lamp_pos);
+    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);        
+    
     m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
+
+    m_scene.current_program->m_setUniform("light.position", m_scene.light->m_position);
+    m_scene.current_program->m_setUniform("light.position", m_scene.light->m_position);
+    m_scene.current_program->m_setUniform("light.ambient", m_scene.light->m_ambient);
+    m_scene.current_program->m_setUniform("light.diffuse", m_scene.light->m_diffuse);
+    m_scene.current_program->m_setUniform("light.specular", m_scene.light->m_specular);
 }
 
 void Application::m_render()
 {
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     ImGui::Begin("lkakhgdf");    
-    ImGui::SliderFloat3("Light Position", &m_scene.lamp_pos[0], -10.0f, 10.0f, "%.3f");
+    ImGui::DragFloat3("Light Position", &m_scene.light->m_position[0], 0.25f, -10.0f, 10.0f, "%.3f");
+    ImGui::DragFloat3("Light Ambient", &m_scene.light->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
+    ImGui::DragFloat3("Light Diffuse", &m_scene.light->m_diffuse[0], 0.05f, 0.0f, 1.0f, "%.2f");
+    ImGui::DragFloat3("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 1.0f, "%.2f");
     ImGui::End();
 
     // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*)0);
@@ -248,8 +268,7 @@ void Application::m_WindowResizeCallback(GLFWwindow* window, int width, int heig
 
 void Application::m_destroy()
 {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();    
     ImGui::DestroyContext();
     m_scene.destroy();
     glfwTerminate();    

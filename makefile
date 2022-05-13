@@ -9,7 +9,9 @@ OBJS = 	src/*.cpp \
 		src/shader/shader.cpp \
 		src/scene/scene.cpp \
 		src/utils/*.cpp \
-		src/texture/*.cpp
+		src/texture/*.cpp \
+		src/material/material.cpp \
+		src/light/light.cpp \
 
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc -Iinclude/imgui

@@ -11,8 +11,7 @@ Camera::Camera(float fov, float near, float far, int width, int height):
     m_front = glm::vec3(0, 0, 1.0f);
     m_up = glm::vec3(0, 1.0f, 0);    
 
-    m_view_mat = glm::mat4x4(1.0f);
-    m_view_mat[2][2] = -1.0f;
+    m_view_mat = glm::mat4x4(1.0f);    
 
     m_proj_mat = glm::perspective(m_fov, (m_width*1.0f) / (m_height*1.0f), m_near, m_far);
 

@@ -4,7 +4,6 @@ layout (location = 0) in vec4 vert_data;
 layout (location = 1) in vec2 p_tex_coord;
 layout (location = 2) in vec3 p_normal;
 
-out vec2 tex_coord;
 out vec3 frag_pos;
 out vec3 normal;
 
@@ -21,8 +20,7 @@ void main()
         vec4( 0.5, -0.5, 0.5, 1.0),
         vec4(-0.5, -0.5, 0.5, 1.0)
     );
-    
-    tex_coord = p_tex_coord;
+        
     normal = normalize(normal_mat * p_normal);
     frag_pos = vec3(model_mat * vert_data);
 
