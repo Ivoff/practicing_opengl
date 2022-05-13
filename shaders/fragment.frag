@@ -12,11 +12,11 @@ uniform vec3 light_color;
 uniform vec3 camera_pos;
 
 void main() 
-{    
-    float specular_intensity = 0.5f;
+{        
     vec3 light_dir = normalize(light_pos - frag_pos);
     vec3 diffuse = max(dot(light_dir, normal), 0.0f) * light_color;
 
+    float specular_intensity = 0.5f;
     vec3 view_dir = normalize(camera_pos - frag_pos);
     vec3 reflect_dir = reflect(-light_dir, normal);
     float spec = pow(max(dot(view_dir, reflect_dir), 0.0f), 32);

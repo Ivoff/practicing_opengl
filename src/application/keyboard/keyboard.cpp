@@ -1,7 +1,9 @@
 #include <application/keyboard/keyboard.hpp>
 
 std::unordered_map<char, char> Keyboard::m_key_map = {
-    {9, 27} // ESC
+    {9, 27}, // ESC
+    {50, 15}, // SHIFT IN
+    {37, 7} // CTRL (não gera código então roubei o do BELL)
 };
 
 Keyboard::Keyboard(GLFWwindow* window)
@@ -34,7 +36,19 @@ void Keyboard::m_Input(Keyboard& keyboard, int key, int scancode, int action, in
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         keyboard.m_toggle['z'] = false;
-    }            
+    }
+
+    // =========================================================================================================================================================   
+    // if ((key == GLFW_KEY_Z && action == GLFW_PRESS) && !keyboard.m_Toggle('z'))
+    // {        
+    //     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //     keyboard.m_toggle['z'] = true;
+    // }
+    // else if ((key == GLFW_KEY_Z && action == GLFW_PRESS) && keyboard.m_Toggle('z'))
+    // {
+    //     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //     keyboard.m_toggle['z'] = false;
+    // }
 
     // =========================================================================================================================================================    
     if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
@@ -71,7 +85,27 @@ void Keyboard::m_Input(Keyboard& keyboard, int key, int scancode, int action, in
     else if (key == GLFW_KEY_D && action == GLFW_RELEASE)
     {
         keyboard.m_pressed['d'] = false;
-    }   
+    }
+
+    if (scancode == 50 && (action == GLFW_PRESS || action == GLFW_REPEAT))
+    {
+        keyboard.m_pressed[keyboard.m_ScanToAsciiCode(scancode)] = true;
+    }
+    else if (scancode == 50 && action == GLFW_RELEASE)
+    {
+        keyboard.m_pressed[keyboard.m_ScanToAsciiCode(scancode)] = false;
+    }
+
+    if (scancode == 37 && (action == GLFW_PRESS || action == GLFW_REPEAT))
+    {
+        keyboard.m_pressed[keyboard.m_ScanToAsciiCode(scancode)] = true;
+    }
+    else if (scancode == 37 && action == GLFW_RELEASE)
+    {
+        keyboard.m_pressed[keyboard.m_ScanToAsciiCode(scancode)] = false;
+    }
+    
+    
 }
 
 bool Keyboard::m_Toggle(char input)

@@ -51,11 +51,16 @@ Application::Application(int width, int height, const char* title, int frame_tar
     
     glfwSetWindowSizeCallback(m_window->m_glfw_window, m_WindowResizeCallback);
 
-    m_mouse = new Mouse(m_window->m_width, m_window->m_height, 0.1f);
-    glfwSetInputMode(m_window->m_glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    m_mouse = new Mouse(m_window->m_width, m_window->m_height, 0.1f);    
     glfwSetCursorPosCallback(m_window->m_glfw_window, m_MouseCallback);
+    glfwSetMouseButtonCallback(m_window->m_glfw_window, m_MouseCallback);
 
-    // glfwSetCursorPos(m_window->m_glfw_window, m_window->m_width/2.0, m_window->m_height/2.0);
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    m_imgui_io = &ImGui::GetIO();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(m_window->m_glfw_window, true);
+    ImGui_ImplOpenGL3_Init("#version 460");
 
     if (m_info.frame_target != 0) {
         m_info.min_fps_time = 1000 / m_info.frame_target;
@@ -97,8 +102,7 @@ void Application::m_pre_process_input()
 }
 
 Application::~Application() {
-    m_destroy();
-    glfwTerminate();        
+    m_destroy();      
 }
 
 //============================================================================================================================================================
@@ -173,10 +177,18 @@ void Application::m_update(float delta_time)
     {
         m_scene.camera->m_position += delta_time * 0.5f * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
     }
+    if (m_keyboard->m_Pressed(15)) // SHIFT
+    {
+        m_scene.camera->m_position += delta_time * 0.5f * glm::vec3(0, 1, 0);
+    }
+    if (m_keyboard->m_Pressed(7)) // CTRL
+    {
+        m_scene.camera->m_position += delta_time * (-0.5f) * glm::vec3(0, 1, 0);
+    }
 
     m_scene.camera->m_LookAt(m_scene.camera->m_front);
 
-    // m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(delta_time*5.0f), glm::vec3(0, 1, 0));    
+    // m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(delta_time*5.0f), glm::vec3(0, 1, 0));
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);    
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);    
@@ -188,8 +200,19 @@ void Application::m_render()
 {
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Begin("lkakhgdf");    
+    ImGui::SliderFloat3("Light Position", &m_scene.lamp_pos[0], -10.0f, 10.0f, "%.3f");
+    ImGui::End();
+
     // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*)0);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void Application::m_KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -198,10 +221,22 @@ void Application::m_KeyboardCallback(GLFWwindow* window, int key, int scancode, 
     app.m_keyboard->m_Input(*(app.m_keyboard), key, scancode, action, mods);
 }
 
+// Mouse movement
 void Application::m_MouseCallback(GLFWwindow* window, double x, double y)
-{
+{    
     Application& app = *((Application*) glfwGetWindowUserPointer(window));
-    app.m_mouse->m_Input(*(app.m_mouse), *(app.m_scene.camera), x, y);
+    if (!app.m_imgui_io->WantCaptureMouse && app.m_mouse->m_pressed["right"])
+    {
+        app.m_mouse->m_Input(*(app.m_mouse), *(app.m_scene.camera), x, y);
+    }        
+}
+
+// Mouse button
+void Application::m_MouseCallback(GLFWwindow* window, int button, int action, int mods)
+{    
+    Application& app = *((Application*) glfwGetWindowUserPointer(window));
+    if (!app.m_imgui_io->WantCaptureMouse)
+        app.m_mouse->m_Input(*(app.m_mouse), window, button, action, mods);
 }
 
 void Application::m_WindowResizeCallback(GLFWwindow* window, int width, int height)
@@ -213,5 +248,9 @@ void Application::m_WindowResizeCallback(GLFWwindow* window, int width, int heig
 
 void Application::m_destroy()
 {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui::DestroyContext();
     m_scene.destroy();
+    glfwTerminate();    
 }

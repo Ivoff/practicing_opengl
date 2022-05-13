@@ -23,7 +23,7 @@ void main()
     );
     
     tex_coord = p_tex_coord;
-    normal = normal_mat * p_normal;
+    normal = normalize(normal_mat * p_normal);
     frag_pos = vec3(model_mat * vert_data);
 
     gl_Position = proj_mat * view_mat * model_mat * vert_data;

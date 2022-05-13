@@ -7,6 +7,10 @@
 #include <thread>
 #include <stdio.h>
 
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -41,6 +45,7 @@ public:
     Scene m_scene;
     Mouse* m_mouse;
     Keyboard* m_keyboard;
+    ImGuiIO* m_imgui_io;
 
     Application(int width, int height, const char* title, int frame_target);
     void m_pre_update();
@@ -51,6 +56,7 @@ public:
     void m_update(float delta_time);    
     static void m_KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void m_MouseCallback(GLFWwindow* window, double x, double y);
+    static void m_MouseCallback(GLFWwindow* window, int button, int action, int mods);
     static void m_WindowResizeCallback(GLFWwindow* window, int width, int height);    
     void m_destroy();
 };
