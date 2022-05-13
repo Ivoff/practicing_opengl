@@ -6,6 +6,7 @@ layout (location = 2) in vec3 p_normal;
 
 out vec3 frag_pos;
 out vec3 normal;
+out vec2 tex_coord;
 
 uniform mat4 model_mat;
 uniform mat4 view_mat;
@@ -23,6 +24,7 @@ void main()
         
     normal = normalize(normal_mat * p_normal);
     frag_pos = vec3(model_mat * vert_data);
+    tex_coord = p_tex_coord;
 
     gl_Position = proj_mat * view_mat * model_mat * vert_data;
 }

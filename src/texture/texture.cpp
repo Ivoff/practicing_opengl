@@ -1,9 +1,12 @@
 #include <texture/texture.hpp>
 
-Texture::Texture(std::string path, GLuint target)
+Texture::Texture(std::string path, GLuint target, GLuint tex_unit)
 {
     m_target = target;
+    m_tex_unit = tex_unit;
     
+    m_activate();
+
     path = PROJECT_ROOT + path;
 
     m_data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
@@ -31,6 +34,7 @@ void Texture::m_gen_tex(GLuint tex_data_type, GLuint pixel_data_type, bool auto_
 
 void Texture::m_bind()
 {
+    m_activate();
     glBindTexture(m_target, m_id);
 }
 
@@ -46,12 +50,9 @@ void Texture::m_set_filtering(GLuint filtering, GLuint scale)
     glTexParameteri(m_target, scale, filtering);
 }
 
-void Texture::m_activate(GLuint tex_unit)
+void Texture::m_activate()
 {
-    m_tex_unit = tex_unit;
-    
-    glActiveTexture(m_tex_unit);
-    m_bind();    
+    glActiveTexture(m_tex_unit);    
 }
 
 void Texture::m_free()

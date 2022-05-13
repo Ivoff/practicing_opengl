@@ -139,12 +139,24 @@ void Application::m_setup()
         glm::vec3(0.5f, 0.5f, 0.5f),
         glm::vec3(1.0f, 1.0f, 1.0f) 
     );
-    m_scene.material = new Material(
-        glm::vec3(0.7f, 0.5f, 0.65f),
-        glm::vec3(0.7f, 0.5f, 0.65f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
+    m_scene.material = new Material (
+        new Texture("textures/AT_Wood_01_4096x2560_DIFF.jpg", GL_TEXTURE_2D, GL_TEXTURE0),
+        new Texture("textures/AT_Wood_01_4096x2560_SPEC.jpg", GL_TEXTURE_2D, GL_TEXTURE1),
         32.0f
     );
+
+    m_scene.material->m_diffuse->m_gen_tex(GL_RGB, GL_RGB, true);    
+    m_scene.material->m_diffuse->m_set_filtering(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    m_scene.material->m_diffuse->m_set_filtering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    m_scene.material->m_diffuse->m_set_wrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
+    m_scene.material->m_diffuse->m_set_wrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);    
+    
+    m_scene.material->m_specular->m_gen_tex(GL_RGB, GL_RGB, true);    
+    m_scene.material->m_specular->m_set_filtering(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    m_scene.material->m_specular->m_set_filtering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    m_scene.material->m_specular->m_set_wrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
+    m_scene.material->m_specular->m_set_wrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);    
+
     glm::mat3 normal_mat = glm::mat3(glm::transpose(glm::inverse(m_scene.model_mat)));        
 
     GLuint vertex_shader = Shader::m_create("shaders/vertex.vert", GL_VERTEX_SHADER);
@@ -163,10 +175,10 @@ void Application::m_setup()
     m_scene.current_program->m_setUniform("light.ambient", m_scene.light->m_ambient);
     m_scene.current_program->m_setUniform("light.diffuse", m_scene.light->m_diffuse);
     m_scene.current_program->m_setUniform("light.specular", m_scene.light->m_specular);
-
-    m_scene.current_program->m_setUniform("material.ambient", m_scene.material->m_ambient);
-    m_scene.current_program->m_setUniform("material.diffuse", m_scene.material->m_diffuse);
-    m_scene.current_program->m_setUniform("material.specular", m_scene.material->m_specular);
+    
+    printf("specular: %d\ndiffuse: %d\n", m_scene.material->m_specular->m_tex_unit, m_scene.material->m_diffuse->m_tex_unit);
+    m_scene.current_program->m_setUniform("material.diffuse", 0);
+    m_scene.current_program->m_setUniform("material.specular", 1);
     m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
 }
 
@@ -211,6 +223,8 @@ void Application::m_update(float delta_time)
     m_scene.current_program->m_setUniform("light.ambient", m_scene.light->m_ambient);
     m_scene.current_program->m_setUniform("light.diffuse", m_scene.light->m_diffuse);
     m_scene.current_program->m_setUniform("light.specular", m_scene.light->m_specular);
+
+    m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
 }
 
 void Application::m_render()
@@ -221,11 +235,14 @@ void Application::m_render()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGui::Begin("lkakhgdf");    
+    ImGui::Begin("Light Properties");
     ImGui::DragFloat3("Light Position", &m_scene.light->m_position[0], 0.25f, -10.0f, 10.0f, "%.3f");
     ImGui::DragFloat3("Light Ambient", &m_scene.light->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
     ImGui::DragFloat3("Light Diffuse", &m_scene.light->m_diffuse[0], 0.05f, 0.0f, 1.0f, "%.2f");
-    ImGui::DragFloat3("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 1.0f, "%.2f");
+    ImGui::DragFloat3("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 1.0f, "%.2f");    
+    ImGui::End();
+    ImGui::Begin("Material Properties");
+    ImGui::DragFloat("Material Shininess", &m_scene.material->m_shininess, 1.0f, 1.0f, 512.0f, "%.2f");
     ImGui::End();
 
     // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*)0);

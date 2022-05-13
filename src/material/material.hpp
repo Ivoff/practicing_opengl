@@ -2,15 +2,15 @@
 #define MATERIAL_H
 
 #include <glm/vec3.hpp>
+#include <texture/texture.hpp>
 
 struct Material
-{
-    glm::vec3 m_ambient;
-    glm::vec3 m_diffuse;
-    glm::vec3 m_specular;
+{    
+    Texture* m_diffuse;
+    Texture* m_specular;
     float m_shininess;
 
-    Material(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess);
+    Material(Texture* diffuse, Texture* specular, float shininess);    
 };
 
 #endif

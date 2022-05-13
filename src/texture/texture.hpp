@@ -16,11 +16,11 @@ struct Texture
     int m_height;
     int m_channels;
 
-    Texture(std::string path, GLuint target);    
+    Texture(std::string path, GLuint target, GLuint tex_unit);    
     void m_set_wrapping(GLuint axis, GLuint wrapping);
     void m_set_filtering(GLuint filtering, GLuint scale);    
     void m_gen_tex(GLuint tex_data_type, GLuint pixel_data_type, bool auto_mipmap);
-    void m_activate(GLuint tex_unit);
+    void m_activate();
     void m_bind();
     void m_free();
     ~Texture();
