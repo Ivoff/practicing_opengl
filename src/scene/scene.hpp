@@ -11,15 +11,18 @@
 
 struct Scene
 {
-    ShaderProgram *current_program;
+    ShaderProgram* current_program;
+    ShaderProgram* lamp_program;
     GLuint current_vao;
     GLuint current_ebo;
-    GLuint current_vbo;
+    GLuint current_vbo;    
     Camera* camera;
     Texture* texture;
     glm::mat4 model_mat;
+    glm::mat4 lamp_model_mat;
     Light* light;    
     Material* material;
+    GLuint lamp_vao;
 
     // CUBE
     float vertex_data[324] {

@@ -112,7 +112,7 @@ void Application::m_setup()
 {
     glEnable(GL_DEPTH_TEST);
 
-    glGenVertexArrays(1, &m_scene.current_vao);    
+    glGenVertexArrays(1, &m_scene.current_vao);
     glGenBuffers(1, &m_scene.current_vbo);
     glGenBuffers(1, &m_scene.current_ebo);
 
@@ -140,8 +140,8 @@ void Application::m_setup()
         glm::vec3(1.0f, 1.0f, 1.0f) 
     );
     m_scene.material = new Material (
-        new Texture("textures/AT_Wood_01_4096x2560_DIFF.jpg", GL_TEXTURE_2D, GL_TEXTURE0),
-        new Texture("textures/AT_Wood_01_4096x2560_SPEC.jpg", GL_TEXTURE_2D, GL_TEXTURE1),
+        new Texture("textures/AT_Wood_01_1920x1200_DIFF.jpg", GL_TEXTURE_2D, GL_TEXTURE0),
+        new Texture("textures/AT_Wood_01_1920x1200_SPEC.jpg", GL_TEXTURE_2D, GL_TEXTURE1),
         32.0f
     );
 
@@ -175,11 +175,31 @@ void Application::m_setup()
     m_scene.current_program->m_setUniform("light.ambient", m_scene.light->m_ambient);
     m_scene.current_program->m_setUniform("light.diffuse", m_scene.light->m_diffuse);
     m_scene.current_program->m_setUniform("light.specular", m_scene.light->m_specular);
-    
-    printf("specular: %d\ndiffuse: %d\n", m_scene.material->m_specular->m_tex_unit, m_scene.material->m_diffuse->m_tex_unit);
+        
     m_scene.current_program->m_setUniform("material.diffuse", 0);
     m_scene.current_program->m_setUniform("material.specular", 1);
     m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
+    glBindVertexArray(0);
+
+    //==============================================================================================================================================================
+
+    glGenVertexArrays(1, &m_scene.lamp_vao);
+    glBindVertexArray(m_scene.lamp_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_scene.current_vbo);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    m_scene.lamp_program = new ShaderProgram({
+        Shader::m_create("shaders/lamp.vert", GL_VERTEX_SHADER),
+        Shader::m_create("shaders/lamp.frag", GL_FRAGMENT_SHADER),
+    });
+    m_scene.lamp_program->m_use();
+    
+    m_scene.lamp_model_mat = glm::scale(glm::translate(m_scene.model_mat, m_scene.light->m_position), glm::vec3(0.1f, 0.1f, 0.1f));
+
+    m_scene.lamp_program->m_setUniform("model_mat", m_scene.lamp_model_mat);
+    m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
+    m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
+    glBindVertexArray(0);
 }
 
 void Application::m_update(float delta_time)
@@ -211,10 +231,11 @@ void Application::m_update(float delta_time)
 
     m_scene.camera->m_LookAt(m_scene.camera->m_front);
 
+    m_scene.current_program->m_use();
     // m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(delta_time*5.0f), glm::vec3(0, 1, 0));
-    m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
-    m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);    
-    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);        
+    m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);
+    m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
+    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
     
     m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
 
@@ -225,6 +246,14 @@ void Application::m_update(float delta_time)
     m_scene.current_program->m_setUniform("light.specular", m_scene.light->m_specular);
 
     m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
+    
+    m_scene.lamp_program->m_use();
+    m_scene.lamp_model_mat[3][0] = m_scene.light->m_position.x;
+    m_scene.lamp_model_mat[3][1] = m_scene.light->m_position.y;
+    m_scene.lamp_model_mat[3][2] = m_scene.light->m_position.z;
+    m_scene.lamp_program->m_setUniform("model_mat", m_scene.lamp_model_mat);
+    m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
+    m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
 }
 
 void Application::m_render()
@@ -245,7 +274,12 @@ void Application::m_render()
     ImGui::DragFloat("Material Shininess", &m_scene.material->m_shininess, 1.0f, 1.0f, 512.0f, "%.2f");
     ImGui::End();
 
-    // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*)0);
+    glBindVertexArray(m_scene.current_vao);
+    m_scene.current_program->m_use();
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    
+    glBindVertexArray(m_scene.lamp_vao);
+    m_scene.lamp_program->m_use();
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     ImGui::Render();
