@@ -133,16 +133,25 @@ void Application::m_setup()
 
     m_scene.camera = new Camera(glm::radians(90.0f), 0.1f, 100.0f, m_window->m_width, m_window->m_height);
     m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));
-    m_scene.light = new Light(
+    m_scene.light = new PointLight(
         glm::vec3(-2.0f, 2.0f, -2.0f),
         glm::vec3(0.2f, 0.2f, 0.2f),
         glm::vec3(0.5f, 0.5f, 0.5f),
-        glm::vec3(1.0f, 1.0f, 1.0f) 
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        1.0f,
+        0.09f,
+        0.032f
     );
     m_scene.material = new Material (
         new Texture("textures/AT_Wood_01_1920x1200_DIFF.jpg", GL_TEXTURE_2D, GL_TEXTURE0),
         new Texture("textures/AT_Wood_01_1920x1200_SPEC.jpg", GL_TEXTURE_2D, GL_TEXTURE1),
         32.0f
+    );
+    m_scene.directional_light = new DirectionalLight(
+        glm::vec3(-1.0f, -1.0f, -0.5f),
+        glm::vec3(0.2f, 0.2f, 0.2f),
+        glm::vec3(0.60f, 0.60f, 0.60f),
+        glm::vec3(0.85f, 0.85f, 0.85f) 
     );
 
     m_scene.material->m_diffuse->m_gen_tex(GL_RGB, GL_RGB, true);    
@@ -171,11 +180,19 @@ void Application::m_setup()
 
     m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
 
-    m_scene.current_program->m_setUniform("light.position", m_scene.light->m_position);
-    m_scene.current_program->m_setUniform("light.ambient", m_scene.light->m_ambient);
-    m_scene.current_program->m_setUniform("light.diffuse", m_scene.light->m_diffuse);
-    m_scene.current_program->m_setUniform("light.specular", m_scene.light->m_specular);
-        
+    m_scene.current_program->m_setUniform("point_light.position", m_scene.light->m_position);
+    m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
+    m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
+    m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
+    m_scene.current_program->m_setUniform("point_light.constant", m_scene.light->m_constant);
+    m_scene.current_program->m_setUniform("point_light.linear", m_scene.light->m_linear);
+    m_scene.current_program->m_setUniform("point_light.quadratic", m_scene.light->m_quadratic);
+
+    m_scene.current_program->m_setUniform("dir_light.direction", m_scene.directional_light->m_direction);
+    m_scene.current_program->m_setUniform("dir_light.ambient", m_scene.directional_light->m_ambient);
+    m_scene.current_program->m_setUniform("dir_light.diffuse", m_scene.directional_light->m_diffuse);
+    m_scene.current_program->m_setUniform("dir_light.specular", m_scene.directional_light->m_specular);
+
     m_scene.current_program->m_setUniform("material.diffuse", 0);
     m_scene.current_program->m_setUniform("material.specular", 1);
     m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
@@ -238,12 +255,11 @@ void Application::m_update(float delta_time)
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
     
     m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
-
-    m_scene.current_program->m_setUniform("light.position", m_scene.light->m_position);
-    m_scene.current_program->m_setUniform("light.position", m_scene.light->m_position);
-    m_scene.current_program->m_setUniform("light.ambient", m_scene.light->m_ambient);
-    m_scene.current_program->m_setUniform("light.diffuse", m_scene.light->m_diffuse);
-    m_scene.current_program->m_setUniform("light.specular", m_scene.light->m_specular);
+    
+    m_scene.current_program->m_setUniform("point_light.position", m_scene.light->m_position);
+    m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
+    m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
+    m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
 
     m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
     

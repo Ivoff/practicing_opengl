@@ -12,6 +12,8 @@ OBJS = 	src/*.cpp \
 		src/texture/*.cpp \
 		src/material/material.cpp \
 		src/light/light.cpp \
+		src/light/directional/light_directional.cpp \
+		src/light/point/light_point.cpp
 
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc -Iinclude/imgui

@@ -16,12 +16,6 @@ uniform mat3 normal_mat;
 
 void main() 
 {
-    const vec4 pos[3] = vec4[3](
-        vec4( 0.0,  0.5, 0.5, 1.0),
-        vec4( 0.5, -0.5, 0.5, 1.0),
-        vec4(-0.5, -0.5, 0.5, 1.0)
-    );
-        
     normal = normalize(normal_mat * p_normal);
     frag_pos = vec3(model_mat * vert_data);
     tex_coord = p_tex_coord;
