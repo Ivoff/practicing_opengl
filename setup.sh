@@ -9,6 +9,10 @@ PYTHON_PATH=${PYTHON_PATH:-python3}
 
 GLM_VERSION=${GLM_VERSION:-0.9.9.8}
 
+ASSIMP_VERSION=${ASSIMP_VERSION:-5.2.4}
+
+NUMBER_THREADS=${NUMBER_THREADS:-12}
+
 if [ "$1" = "reset"  ]; then
     
     rm -rf ./_extern
@@ -56,3 +60,11 @@ ENV_CODE="#ifndef ENV_H\n#define ENV_H\n\n#define PROJECT_ROOT \"$PWD/\"\n\n#end
 echo "$ENV_CODE" > src/env.hpp
 mkdir build
 touch src/main.cpp
+
+wget "https://github.com/assimp/assimp/archive/refs/tags/v$ASSIMP_VERSION.zip" -O ./_extern/assimp.zip
+unzip ./_extern/assimp.zip -d ./_extern
+cd ./_extern/assimp-$ASSIMP_VERSION
+cmake CMakeLists.txt -DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_TESTS=OFF
+make -j$NUMBER_THREADS
+cp ./lib/libassimp.a ../../lib/
+cp -r ./include/* ../../include/

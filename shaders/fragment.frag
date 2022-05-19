@@ -54,15 +54,6 @@ uniform DirectionalLight    dir_light;
 
 void main() 
 {
-//    vec3 ambient = point_light.ambient * texture(material.diffuse, tex_coord).rgb;
-//
-//    vec3 light_dir = normalize(point_light.position - frag_pos);
-//    vec3 diffuse = max(dot(light_dir, normal), 0.0f) * point_light.diffuse * texture(material.diffuse, tex_coord).rgb;
-//    
-//    vec3 view_dir = normalize(camera_pos - frag_pos);
-//    vec3 reflect_dir = reflect(-light_dir, normal);    
-//    vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * texture(material.specular, tex_coord).rgb * light.specular;
-
     vec3 directional_result;
     vec3 point_result;
   
@@ -77,7 +68,7 @@ void main()
     directional_light_func(data, directional_result);
     point_light_func(data, point_result);
 
-    frag_color = vec4(point_result, 1.0f);
+    frag_color = vec4(point_result + directional_result, 1.0f);
 }
 
 void directional_light_func(in DataLight data, out vec3 result)
