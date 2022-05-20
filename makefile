@@ -6,19 +6,22 @@ OBJS = 	src/*.cpp \
 		src/application/keyboard/keyboard.cpp \
 		src/application/window/window.cpp \
 		src/application/imgui/*.cpp \
+		src/application/imgui/imgui_wrapper/imgui_wrapper.cpp \
 		src/shader/shader.cpp \
 		src/scene/scene.cpp \
 		src/utils/*.cpp \
-		src/texture/*.cpp \
+		src/texture/texture.cpp \
 		src/material/material.cpp \
 		src/light/light.cpp \
 		src/light/directional/light_directional.cpp \
-		src/light/point/light_point.cpp
+		src/light/point/light_point.cpp \
+		src/mesh/mesh.cpp \
+		src/model/model.cpp
 
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc -Iinclude/imgui
 CC = g++
-COMPILER_FLAGS = -w -g -std=c++11
+COMPILER_FLAGS = -w -std=c++11
 LINKER_FLAGS = -lglfw3 -lassimp -lGL -lX11 -lpthread -lXrandr -lXi -ldl
 OBJ_NAME = a.out
 

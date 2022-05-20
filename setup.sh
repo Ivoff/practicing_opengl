@@ -64,7 +64,8 @@ touch src/main.cpp
 wget "https://github.com/assimp/assimp/archive/refs/tags/v$ASSIMP_VERSION.zip" -O ./_extern/assimp.zip
 unzip ./_extern/assimp.zip -d ./_extern
 cd ./_extern/assimp-$ASSIMP_VERSION
-cmake CMakeLists.txt -DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_TESTS=OFF
+cmake CMakeLists.txt -DASSIMP_BUILD_ASSIMP_TOOLS=OFF -DASSIMP_BUILD_TESTS=OFF
 make -j$NUMBER_THREADS
-cp ./lib/libassimp.a ../../lib/
+cp ./bin/libassimp* ../../lib/
 cp -r ./include/* ../../include/
+cd ../../

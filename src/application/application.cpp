@@ -55,13 +55,7 @@ Application::Application(int width, int height, const char* title, int frame_tar
     glfwSetCursorPosCallback(m_window->m_glfw_window, m_MouseCallback);
     glfwSetMouseButtonCallback(m_window->m_glfw_window, m_MouseCallback);
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    m_imgui_io = &ImGui::GetIO();
-    m_imgui_io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(m_window->m_glfw_window, true);
-    ImGui_ImplOpenGL3_Init("#version 460");
+    m_imgui = new ImGuiWrapper(m_window->m_glfw_window, "#version 460");
 
     if (m_info.frame_target != 0) {
         m_info.min_fps_time = 1000 / m_info.frame_target;
@@ -110,29 +104,9 @@ Application::~Application() {
 
 void Application::m_setup()
 {
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);    
 
-    glGenVertexArrays(1, &m_scene.current_vao);
-    glGenBuffers(1, &m_scene.current_vbo);
-    glGenBuffers(1, &m_scene.current_ebo);
-
-    glBindVertexArray(m_scene.current_vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_scene.current_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_scene.vertex_data), m_scene.vertex_data, GL_DYNAMIC_DRAW);    
-
-    // vertex_pos pointer
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // uv_coords pointer
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(4*sizeof(float)));
-    glEnableVertexAttribArray(1);
-    // normal pointer
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)(6*sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    m_scene.camera = new Camera(glm::radians(90.0f), 0.1f, 100.0f, m_window->m_width, m_window->m_height);
-    m_scene.model_mat = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 2));
+    m_scene.camera = new Camera(90.0f, 0.1f, 100.0f, m_window->m_width, m_window->m_height);    
     m_scene.light = new PointLight(
         glm::vec3(-2.0f, 2.0f, -2.0f),
         glm::vec3(0.2f, 0.2f, 0.2f),
@@ -141,116 +115,79 @@ void Application::m_setup()
         1.0f,
         0.09f,
         0.032f
-    );
-    m_scene.material = new Material (
-        new Texture("textures/AT_Wood_01_1920x1200_DIFF.jpg", GL_TEXTURE_2D, GL_TEXTURE0),
-        new Texture("textures/AT_Wood_01_1920x1200_SPEC.jpg", GL_TEXTURE_2D, GL_TEXTURE1),
-        32.0f
-    );
+    );    
     m_scene.directional_light = new DirectionalLight(
         glm::vec3(-1.0f, -1.0f, -0.5f),
         glm::vec3(0.2f, 0.2f, 0.2f),
         glm::vec3(0.60f, 0.60f, 0.60f),
         glm::vec3(0.85f, 0.85f, 0.85f) 
-    );
-
-    m_scene.material->m_diffuse->m_gen_tex(GL_RGB, GL_RGB, true);    
-    m_scene.material->m_diffuse->m_set_filtering(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    m_scene.material->m_diffuse->m_set_filtering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    m_scene.material->m_diffuse->m_set_wrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
-    m_scene.material->m_diffuse->m_set_wrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);    
-    
-    m_scene.material->m_specular->m_gen_tex(GL_RGB, GL_RGB, true);    
-    m_scene.material->m_specular->m_set_filtering(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    m_scene.material->m_specular->m_set_filtering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    m_scene.material->m_specular->m_set_wrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
-    m_scene.material->m_specular->m_set_wrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);    
-
-    glm::mat3 normal_mat = glm::mat3(glm::transpose(glm::inverse(m_scene.model_mat)));        
+    );    
+    glm::mat3 normal_mat = glm::mat3(glm::transpose(glm::inverse(m_scene.model_mat)));            
 
     GLuint vertex_shader = Shader::m_create("shaders/vertex.vert", GL_VERTEX_SHADER);
-    GLuint fragment_shader = Shader::m_create("shaders/fragment.frag", GL_FRAGMENT_SHADER);     
+    GLuint fragment_shader = Shader::m_create("shaders/lightless_fragment.frag", GL_FRAGMENT_SHADER);     
     m_scene.current_program = new ShaderProgram({vertex_shader, fragment_shader});
     m_scene.current_program->m_use();
-        
+
     m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
     m_scene.current_program->m_setUniform("normal_mat", normal_mat);
-
     m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
 
-    m_scene.current_program->m_setUniform("point_light.position", m_scene.light->m_position);
-    m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
-    m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
-    m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
-    m_scene.current_program->m_setUniform("point_light.constant", m_scene.light->m_constant);
-    m_scene.current_program->m_setUniform("point_light.linear", m_scene.light->m_linear);
-    m_scene.current_program->m_setUniform("point_light.quadratic", m_scene.light->m_quadratic);
 
-    m_scene.current_program->m_setUniform("dir_light.direction", m_scene.directional_light->m_direction);
-    m_scene.current_program->m_setUniform("dir_light.ambient", m_scene.directional_light->m_ambient);
-    m_scene.current_program->m_setUniform("dir_light.diffuse", m_scene.directional_light->m_diffuse);
-    m_scene.current_program->m_setUniform("dir_light.specular", m_scene.directional_light->m_specular);
-
-    m_scene.current_program->m_setUniform("material.diffuse", 0);
-    m_scene.current_program->m_setUniform("material.specular", 1);
-    m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
-    glBindVertexArray(0);
-
-    //==============================================================================================================================================================
-
-    glGenVertexArrays(1, &m_scene.lamp_vao);
-    glBindVertexArray(m_scene.lamp_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_scene.current_vbo);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 9*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    m_scene.lamp_program = new ShaderProgram({
-        Shader::m_create("shaders/lamp.vert", GL_VERTEX_SHADER),
-        Shader::m_create("shaders/lamp.frag", GL_FRAGMENT_SHADER),
-    });
-    m_scene.lamp_program->m_use();
-    
-    m_scene.lamp_model_mat = glm::scale(glm::translate(m_scene.model_mat, m_scene.light->m_position), glm::vec3(0.1f, 0.1f, 0.1f));
-
-    m_scene.lamp_program->m_setUniform("model_mat", m_scene.lamp_model_mat);
-    m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-    glBindVertexArray(0);
+    m_scene.model.m_LoadModel(PROJECT_ROOT + std::string("models/sponza/sponza.obj"));
 }
 
 void Application::m_update(float delta_time)
 {
     if (m_keyboard->m_Pressed('w'))
     {
-        m_scene.camera->m_position += delta_time * 0.5f * m_scene.camera->m_front;
+        m_scene.camera->m_position += delta_time * m_scene.camera->m_speed * m_scene.camera->m_front;
     }
     if (m_keyboard->m_Pressed('s'))
     {
-        m_scene.camera->m_position -= delta_time * 0.5f * m_scene.camera->m_front;
+        m_scene.camera->m_position -= delta_time * m_scene.camera->m_speed * m_scene.camera->m_front;
     }
     if (m_keyboard->m_Pressed('a'))
     {
-        m_scene.camera->m_position -= delta_time * 0.5f * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
+        m_scene.camera->m_position -= delta_time * m_scene.camera->m_speed * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
     }
     if (m_keyboard->m_Pressed('d'))
     {
-        m_scene.camera->m_position += delta_time * 0.5f * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
+        m_scene.camera->m_position += delta_time * m_scene.camera->m_speed * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
     }
     if (m_keyboard->m_Pressed(15)) // SHIFT
     {
-        m_scene.camera->m_position += delta_time * 0.5f * glm::vec3(0, 1, 0);
+        m_scene.camera->m_position += delta_time * m_scene.camera->m_speed * glm::vec3(0, 1, 0);
     }
     if (m_keyboard->m_Pressed(7)) // CTRL
     {
-        m_scene.camera->m_position += delta_time * (-0.5f) * glm::vec3(0, 1, 0);
+        m_scene.camera->m_position += delta_time * (-m_scene.camera->m_speed) * glm::vec3(0, 1, 0);
     }
 
     m_scene.camera->m_LookAt(m_scene.camera->m_front);
 
-    m_scene.current_program->m_use();
-    // m_scene.model_mat = glm::rotate(m_scene.model_mat, glm::radians(delta_time*5.0f), glm::vec3(0, 1, 0));
-    m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);
+    m_scene.current_program->m_use();        
+
+
+    glm::mat4 model_mat = glm::scale(
+        m_scene.model.m_model_mat, 
+        glm::vec3(
+            m_scene.model.m_scale, 
+            m_scene.model.m_scale, 
+            m_scene.model.m_scale
+        )
+    );    
+    m_scene.current_program->m_setUniform("model_mat", model_mat);    
+
+    m_scene.camera->m_UpdateProjMat(
+        m_scene.camera->m_fov,
+        m_scene.camera->m_near,
+        m_scene.camera->m_far,
+        m_window->m_width, 
+        m_window->m_height
+    );
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
     
@@ -260,46 +197,40 @@ void Application::m_update(float delta_time)
     m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
     m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
     m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
-
-    m_scene.current_program->m_setUniform("material.shininess", m_scene.material->m_shininess);
-    
-    m_scene.lamp_program->m_use();
-    m_scene.lamp_model_mat[3][0] = m_scene.light->m_position.x;
-    m_scene.lamp_model_mat[3][1] = m_scene.light->m_position.y;
-    m_scene.lamp_model_mat[3][2] = m_scene.light->m_position.z;
-    m_scene.lamp_program->m_setUniform("model_mat", m_scene.lamp_model_mat);
-    m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
 }
 
 void Application::m_render()
 {
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+    
+    m_imgui->m_NewFrame();
 
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
     ImGui::Begin("Light Properties");
     ImGui::DragFloat3("Light Position", &m_scene.light->m_position[0], 0.25f, -10.0f, 10.0f, "%.3f");
     ImGui::DragFloat3("Light Ambient", &m_scene.light->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
     ImGui::DragFloat3("Light Diffuse", &m_scene.light->m_diffuse[0], 0.05f, 0.0f, 1.0f, "%.2f");
     ImGui::DragFloat3("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 1.0f, "%.2f");    
     ImGui::End();
-    ImGui::Begin("Material Properties");
-    ImGui::DragFloat("Material Shininess", &m_scene.material->m_shininess, 1.0f, 1.0f, 512.0f, "%.2f");
+
+    ImGui::Begin("Model Properties");
+    ImGui::DragFloat("Model Scale", &m_scene.model.m_scale, 0.001f, 0.0f, 5.0f, "%.3f");
     ImGui::End();
 
-    glBindVertexArray(m_scene.current_vao);
-    m_scene.current_program->m_use();
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    
-    glBindVertexArray(m_scene.lamp_vao);
-    m_scene.lamp_program->m_use();
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    ImGui::Begin("Camera Properties");
+    ImGui::DragFloat("Near Plane", &m_scene.camera->m_near, 0.01f, 0.0f, 100000.0f, "%.2f");
+    ImGui::DragFloat("Far Plane", &m_scene.camera->m_far, 10.0f, 0.0f, 100000.0f, "%.2f");
+    ImGui::DragFloat("FOV", &m_scene.camera->m_fov, 1.0f, 0.0f, 180.0f, "%.2f");
+    ImGui::End();
 
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui::Begin("Control Properties");    
+    ImGui::DragFloat("Move Speed", &m_scene.camera->m_speed, 0.05f, 0.0f, 100.0f, "%.2f");    
+    ImGui::DragFloat("Mouse Sensibility", &m_mouse->m_sensitivity, 0.001f, 0.0f, 5.0f, "%.3f");
+    ImGui::End();
+
+    m_scene.model.m_Draw(m_scene.current_program);
+
+    m_imgui->m_Render();
 }
 
 void Application::m_KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -312,7 +243,7 @@ void Application::m_KeyboardCallback(GLFWwindow* window, int key, int scancode, 
 void Application::m_MouseCallback(GLFWwindow* window, double x, double y)
 {    
     Application& app = *((Application*) glfwGetWindowUserPointer(window));
-    if (!app.m_imgui_io->WantCaptureMouse && app.m_mouse->m_pressed["right"])
+    if (!app.m_imgui->m_io->WantCaptureMouse && app.m_mouse->m_pressed["right"])
     {
         app.m_mouse->m_Input(*(app.m_mouse), *(app.m_scene.camera), x, y);
     }        
@@ -322,7 +253,7 @@ void Application::m_MouseCallback(GLFWwindow* window, double x, double y)
 void Application::m_MouseCallback(GLFWwindow* window, int button, int action, int mods)
 {    
     Application& app = *((Application*) glfwGetWindowUserPointer(window));
-    if (!app.m_imgui_io->WantCaptureMouse)
+    if (!app.m_imgui->m_io->WantCaptureMouse)
         app.m_mouse->m_Input(*(app.m_mouse), window, button, action, mods);
 }
 
@@ -330,13 +261,18 @@ void Application::m_WindowResizeCallback(GLFWwindow* window, int width, int heig
 {
     Application* app = (Application*) glfwGetWindowUserPointer(window);
     
-    app->m_scene.camera->m_UpdateProjMat(glm::radians(90.0f), 0.1f, 100, width, height);
+    app->m_scene.camera->m_UpdateProjMat(
+        app->m_scene.camera->m_fov, 
+        app->m_scene.camera->m_near, 
+        app->m_scene.camera->m_far, 
+        width, 
+        height
+    );
 }
 
 void Application::m_destroy()
 {
-    ImGui_ImplOpenGL3_Shutdown();    
-    ImGui::DestroyContext();
+    m_imgui->m_Destroy();
     m_scene.destroy();
     glfwTerminate();    
 }

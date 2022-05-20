@@ -13,10 +13,11 @@ Camera::Camera(float fov, float near, float far, int width, int height):
 
     m_view_mat = glm::mat4x4(1.0f);    
 
-    m_proj_mat = glm::perspective(m_fov, (m_width*1.0f) / (m_height*1.0f), m_near, m_far);
+    m_proj_mat = glm::perspective(glm::radians(m_fov), (m_width*1.0f) / (m_height*1.0f), m_near, m_far);
 
     m_yaw = 90.0f; // para garantir que a camera comece apontada na direção do z negativo
     m_pitch = 0.0f;
+    m_speed = 0.5f;
 }
 
 void Camera::m_UpdateProjMat(float fov, float near, float far, int width, int height)
@@ -27,7 +28,7 @@ void Camera::m_UpdateProjMat(float fov, float near, float far, int width, int he
     m_width = width;
     m_height = height;
 
-    m_proj_mat = glm::perspective(m_fov, (m_width*1.0f) / (m_height*1.0f), m_near, m_far);
+    m_proj_mat = glm::perspective(glm::radians(m_fov), (m_width*1.0f) / (m_height*1.0f), m_near, m_far);
 }
 
 void Camera::m_SetFrontDir(float yaw, float pitch)

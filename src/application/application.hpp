@@ -7,11 +7,9 @@
 #include <thread>
 #include <stdio.h>
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
-
 #include <glad/glad.h>
+#include <application/imgui/imgui_wrapper/imgui_wrapper.hpp>
+
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
@@ -45,7 +43,7 @@ public:
     Scene m_scene;
     Mouse* m_mouse;
     Keyboard* m_keyboard;
-    ImGuiIO* m_imgui_io;
+    ImGuiWrapper* m_imgui;
 
     Application(int width, int height, const char* title, int frame_target);
     void m_pre_update();
