@@ -127,6 +127,7 @@ void Application::m_setup()
     GLuint vertex_shader = Shader::m_create("shaders/vertex.vert", GL_VERTEX_SHADER);
     GLuint fragment_shader = Shader::m_create("shaders/fragment.frag", GL_FRAGMENT_SHADER);     
     m_scene.current_program = new ShaderProgram({vertex_shader, fragment_shader});
+    m_scene.current_program->m_selected = true;
     m_scene.current_program->m_use();
     
     m_scene.model.m_model_mat = glm::scale(m_scene.model.m_model_mat, glm::vec3(0.02));
@@ -149,16 +150,26 @@ void Application::m_setup()
     m_scene.current_program->m_setUniform("point_light.constant", m_scene.light->m_constant);
     m_scene.current_program->m_setUniform("point_light.linear", m_scene.light->m_linear);
     m_scene.current_program->m_setUniform("point_light.quadratic", m_scene.light->m_quadratic);
+    m_scene.illumination_program = m_scene.current_program;
+
+    m_scene.lightless_program = new ShaderProgram({
+        vertex_shader,
+        Shader::m_create("shaders/lightless_fragment.frag", GL_FRAGMENT_SHADER)
+    });
+    m_scene.lightless_program->m_use();
+    m_scene.lightless_program->m_setUniform("model_mat", m_scene.lamp.m_model_mat);
+    m_scene.lightless_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
+    m_scene.lightless_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
 
     m_scene.lamp_program = new ShaderProgram({
         Shader::m_create("shaders/lamp.vert", GL_VERTEX_SHADER),
         Shader::m_create("shaders/lamp.frag", GL_FRAGMENT_SHADER)
-    });    
+    });
     m_scene.lamp_program->m_use();
     m_scene.lamp.m_model_mat = glm::translate(m_scene.lamp.m_model_mat, m_scene.light->m_position);
-    m_scene.current_program->m_setUniform("model_mat", m_scene.lamp.m_model_mat);
-    m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
+    m_scene.lamp_program->m_setUniform("model_mat", m_scene.lamp.m_model_mat);
+    m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
+    m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);    
 
     m_scene.model.m_LoadModel(PROJECT_ROOT + std::string("models/sponza/sponza.obj"));
     m_scene.lamp.m_LoadModel(PROJECT_ROOT + std::string("models/cube/cube.obj"));
@@ -209,8 +220,8 @@ void Application::m_update(float delta_time)
         m_scene.camera->m_fov,
         m_scene.camera->m_near,
         m_scene.camera->m_far,
-        m_window->m_width, 
-        m_window->m_height
+        m_scene.camera->m_width, 
+        m_scene.camera->m_height
     );
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
@@ -232,6 +243,11 @@ void Application::m_update(float delta_time)
     m_scene.lamp_program->m_setUniform("model_mat", lamp_model_mat);
     m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
+
+    m_scene.lightless_program->m_use();
+    m_scene.lightless_program->m_setUniform("model_mat", model_mat);
+    m_scene.lightless_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
+    m_scene.lightless_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
 }
 
 void Application::m_render()
@@ -263,6 +279,25 @@ void Application::m_render()
     ImGui::Begin("Control Properties");    
     ImGui::DragFloat("Move Speed", &m_scene.camera->m_speed, 0.05f, 0.0f, 100.0f, "%.2f");    
     ImGui::DragFloat("Mouse Sensibility", &m_mouse->m_sensitivity, 0.001f, 0.0f, 5.0f, "%.3f");
+    ImGui::End();
+
+    ImGui::Begin("Scene Properties");    
+    if (ImGui::BeginMenu("Current Shader"))
+    {        
+        if (ImGui::MenuItem("illumination_program", "", &m_scene.illumination_program->m_selected))
+        {
+            m_scene.current_program = m_scene.illumination_program;
+            m_scene.illumination_program->m_selected = true;
+            m_scene.lightless_program->m_selected = false;
+        } 
+        if (ImGui::MenuItem("lightless_program", "", &m_scene.lightless_program->m_selected))
+        {
+            m_scene.current_program = m_scene.lightless_program;
+            m_scene.lightless_program->m_selected = true;
+            m_scene.illumination_program->m_selected = false;
+        }        
+        ImGui::EndMenu();
+    }        
     ImGui::End();
 
     ImGui::ShowDemoWindow();

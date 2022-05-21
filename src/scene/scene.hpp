@@ -16,6 +16,8 @@ struct Scene
 {
     ShaderProgram* current_program;    
     ShaderProgram* lamp_program;
+    ShaderProgram* lightless_program;
+    ShaderProgram* illumination_program;
     Camera* camera;    
     DirectionalLight* directional_light;    
     Model model;

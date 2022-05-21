@@ -56,7 +56,8 @@ private:
 
 public:
     GLuint m_id;
-    std::vector<GLuint> m_shaders;    
+    std::vector<GLuint> m_shaders;
+    bool m_selected;
 
     ShaderProgram(std::vector<GLuint> shaders);
     void m_setUniform(std::string uniform_name, glm::vec4& uniform_value);\

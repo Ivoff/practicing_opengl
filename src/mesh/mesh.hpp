@@ -3,6 +3,7 @@
 
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <vector>
 
 #include <texture/texture.hpp>
@@ -33,6 +34,8 @@ struct Mesh
 
     void m_PrintVertexes();
     void m_PrintIndices();
+    void m_PrintTextures(std::vector<Texture>* textures);
+    void m_PrintMaterials();
 };
 
 #endif

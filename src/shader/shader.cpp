@@ -3,6 +3,7 @@
 ShaderProgram::ShaderProgram(std::vector<GLuint> shaders):
     m_shaders{shaders}
 {
+    m_selected = false;
     m_id = glCreateProgram();
     for(auto some_shader : m_shaders)
         glAttachShader(m_id, some_shader);

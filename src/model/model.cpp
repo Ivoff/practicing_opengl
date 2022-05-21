@@ -108,6 +108,7 @@ Mesh Model::m_ProcessMesh(aiMesh* mesh, const aiScene* scene)
             Texture diffuse_tex;
             diffuse_tex = diffuse_tex.BlackTex();
             diffuse_tex.m_type = "diffuse";
+            diffuse_tex.m_path = "[Null]";
             output_mesh.m_textures.push_back(diffuse_tex);
         }
         else
@@ -120,7 +121,8 @@ Mesh Model::m_ProcessMesh(aiMesh* mesh, const aiScene* scene)
         {
             Texture specular_tex;
             specular_tex = specular_tex.BlackTex();
-            specular_tex.m_type = "diffuse";
+            specular_tex.m_type = "specular";
+            specular_tex.m_path = "[Null]";
             output_mesh.m_textures.push_back(specular_tex);
         }
         else
@@ -165,7 +167,8 @@ Mesh Model::m_ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
         output_mesh.m_material = material;
     }
-    else {
+    else 
+    {
         output_mesh.m_material.m_diffuse = glm::vec3(1.0f);
         output_mesh.m_material.m_specular = glm::vec3(1.0f);
         output_mesh.m_material.m_shininess = 10.0f;
@@ -195,7 +198,7 @@ std::vector<Texture> Model::m_LoadMaterialTexture(aiMaterial* material, aiTextur
         }
         
         std::string texture_path = m_directory + sub_path;
-        // printf("Trying to load:\n\tTexture(%s)\n", texture_path.c_str());
+        printf("Trying to load:\n\tTexture(%s)\n", texture_path.c_str());
 
         bool skip = false;
         int loaded_len = m_textures_loaded.size();
@@ -216,6 +219,8 @@ std::vector<Texture> Model::m_LoadMaterialTexture(aiMaterial* material, aiTextur
             texture.m_type = type_name;
             texture.m_path = texture_path;
             m_textures_loaded.push_back(texture);
+            
+            textures.push_back(texture);
         }        
     }
 
