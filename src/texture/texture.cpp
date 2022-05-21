@@ -9,7 +9,7 @@ Texture::Texture(std::string path, GLuint target)
     {
         path = PROJECT_ROOT + path;
     }        
-    stbi_set_flip_vertically_on_load(true);
+    // stbi_set_flip_vertically_on_load(true);
     m_data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
     
     if (!m_data)
@@ -84,6 +84,18 @@ void Texture::m_DefaultConfig()
     m_SetFiltering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     m_SetWrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
     m_SetWrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);
+}
+
+Texture Texture::WhiteTex()
+{
+    static Texture white_tex = Texture("textures/white.jpg", GL_TEXTURE_2D);
+    return white_tex;
+}
+
+Texture Texture::BlackTex()
+{
+    static Texture black_tex = Texture("textures/black.jpg", GL_TEXTURE_2D);
+    return black_tex;
 }
 
 void Texture::m_Free()

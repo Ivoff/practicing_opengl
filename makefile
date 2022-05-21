@@ -21,7 +21,7 @@ OBJS = 	src/*.cpp \
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc -Iinclude/imgui
 CC = g++
-COMPILER_FLAGS = -w -std=c++11
+COMPILER_FLAGS = -w -g -std=c++11
 LINKER_FLAGS = -lglfw3 -lassimp -lGL -lX11 -lpthread -lXrandr -lXi -ldl
 OBJ_NAME = a.out
 

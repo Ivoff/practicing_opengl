@@ -4,7 +4,7 @@ Model::Model()
 {
     m_model_mat = glm::mat4(1.0f);
     m_normal_mat = glm::mat3(1.0f);
-    m_scale = 1.0f;
+    m_scale = 1.0f;    
 }
 
 Model::Model(std::string path)
@@ -103,10 +103,30 @@ Mesh Model::m_ProcessMesh(aiMesh* mesh, const aiScene* scene)
         aiMaterial* ai_material = scene->mMaterials[mesh->mMaterialIndex];        
         
         std::vector<Texture> diffuse_maps = m_LoadMaterialTexture(ai_material, aiTextureType_DIFFUSE, "diffuse");
-        output_mesh.m_textures.insert(output_mesh.m_textures.end(), diffuse_maps.begin(), diffuse_maps.end());
+        if (diffuse_maps.size() == 0)
+        {
+            Texture diffuse_tex;
+            diffuse_tex = diffuse_tex.BlackTex();
+            diffuse_tex.m_type = "diffuse";
+            output_mesh.m_textures.push_back(diffuse_tex);
+        }
+        else
+        {
+            output_mesh.m_textures.insert(output_mesh.m_textures.end(), diffuse_maps.begin(), diffuse_maps.end());
+        }        
 
         std::vector<Texture> specular_maps = m_LoadMaterialTexture(ai_material, aiTextureType_SPECULAR, "specular");
-        output_mesh.m_textures.insert(output_mesh.m_textures.end(), specular_maps.begin(), specular_maps.end());
+        if (specular_maps.size() == 0)
+        {
+            Texture specular_tex;
+            specular_tex = specular_tex.BlackTex();
+            specular_tex.m_type = "diffuse";
+            output_mesh.m_textures.push_back(specular_tex);
+        }
+        else
+        {
+            output_mesh.m_textures.insert(output_mesh.m_textures.end(), specular_maps.begin(), specular_maps.end());
+        }        
 
         Material material = Material(glm::vec3(1.0f), glm::vec3(1.0f), 10.0f);
         aiColor3D ai_color;

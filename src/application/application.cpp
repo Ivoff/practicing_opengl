@@ -61,7 +61,7 @@ Application::Application(int width, int height, const char* title, int frame_tar
         m_info.min_fps_time = 1000 / m_info.frame_target;
     }
 
-    m_scene = Scene();
+    m_scene = Scene();    
 
     m_info.is_running = true;
 
@@ -265,6 +265,8 @@ void Application::m_render()
     ImGui::DragFloat("Mouse Sensibility", &m_mouse->m_sensitivity, 0.001f, 0.0f, 5.0f, "%.3f");
     ImGui::End();
 
+    ImGui::ShowDemoWindow();
+
     m_scene.model.m_Draw(m_scene.current_program);
     m_scene.lamp.m_Draw(m_scene.lamp_program);
 
@@ -296,9 +298,12 @@ void Application::m_MouseCallback(GLFWwindow* window, int button, int action, in
 }
 
 void Application::m_WindowResizeCallback(GLFWwindow* window, int width, int height)
-{
+{    
     Application* app = (Application*) glfwGetWindowUserPointer(window);
     
+    app->m_window->m_width = width;
+    app->m_window->m_height = height;    
+
     app->m_scene.camera->m_UpdateProjMat(
         app->m_scene.camera->m_fov, 
         app->m_scene.camera->m_near, 

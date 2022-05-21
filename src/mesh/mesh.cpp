@@ -56,16 +56,14 @@ void Mesh::m_Draw(ShaderProgram* shader)
             uniform_name = uniform_name + "diffuse_" + std::to_string(diffuse_counter++);
         }            
         
-        shader->m_setUniform(uniform_name, i);        
+        shader->m_setUniform(uniform_name, i);
         shader->m_setUniform("material.diffuse", m_material.m_diffuse);
         shader->m_setUniform("material.specular", m_material.m_specular);
         shader->m_setUniform("material.shininess", m_material.m_shininess);
 
         m_textures[i].m_Activate(GL_TEXTURE0 + i);
         m_textures[i].m_Bind();        
-    }    
-
-    glActiveTexture(GL_TEXTURE0);
+    }
     
     glBindVertexArray(m_vao);
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);    

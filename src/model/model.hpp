@@ -22,7 +22,7 @@ struct Model
     std::string m_directory;
     glm::mat4 m_model_mat;
     glm::mat3 m_normal_mat;
-    float m_scale;
+    float m_scale;    
 
     Model();
     Model(std::string path);

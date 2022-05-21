@@ -9,7 +9,6 @@
 #include <chrono>
 #include <thread>
 
-
 int main()
 {
     Application app = Application(800, 600, "OpenGL", 60);
