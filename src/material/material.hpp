@@ -3,14 +3,17 @@
 
 #include <glm/vec3.hpp>
 #include <texture/texture.hpp>
+#include <string>
 
 struct Material
 {    
-    Texture* m_diffuse;
-    Texture* m_specular;
+    std::string m_name;
+    glm::vec3 m_diffuse;
+    glm::vec3 m_specular;
     float m_shininess;
 
-    Material(Texture* diffuse, Texture* specular, float shininess);    
+    Material(glm::vec3 diffuse, glm::vec3 specular, float shininess);
+    Material();
 };
 
 #endif

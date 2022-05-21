@@ -1,4 +1,4 @@
-#include <application/imgui/imgui_wrapper/imgui_wrapper.hpp>
+#include <application/imgui_wrapper/imgui_wrapper.hpp>
 
 ImGuiWrapper::ImGuiWrapper(GLFWwindow* glfw_window, std::string opengl_version)
 {

@@ -8,12 +8,13 @@
 #include <stdio.h>
 
 #include <glad/glad.h>
-#include <application/imgui/imgui_wrapper/imgui_wrapper.hpp>
+#include <application/imgui_wrapper/imgui_wrapper.hpp>
 
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include <shader/shader.hpp>
 #include <camera/camera.hpp>

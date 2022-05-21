@@ -15,12 +15,14 @@
 struct Scene
 {
     ShaderProgram* current_program;    
-    Camera* camera;
-    glm::mat4 model_mat;
-    DirectionalLight* directional_light;
-    PointLight* light;
+    ShaderProgram* lamp_program;
+    Camera* camera;    
+    DirectionalLight* directional_light;    
     Model model;
+    Model lamp;
+    PointLight* light;
     float scale;
+    bool directional_active;
     
     void destroy();
 };

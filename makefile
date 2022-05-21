@@ -6,7 +6,7 @@ OBJS = 	src/*.cpp \
 		src/application/keyboard/keyboard.cpp \
 		src/application/window/window.cpp \
 		src/application/imgui/*.cpp \
-		src/application/imgui/imgui_wrapper/imgui_wrapper.cpp \
+		src/application/imgui_wrapper/imgui_wrapper.cpp \
 		src/shader/shader.cpp \
 		src/scene/scene.cpp \
 		src/utils/*.cpp \

@@ -7,6 +7,7 @@
 
 #include <texture/texture.hpp>
 #include <shader/shader.hpp>
+#include <material/material.hpp>
 
 struct Vertex
 {
@@ -23,11 +24,15 @@ struct Mesh
     std::vector<Vertex> m_vertexes;
     std::vector<unsigned int> m_indices;
     std::vector<Texture> m_textures;
+    Material m_material;
 
     Mesh(){};
-    Mesh(std::vector<Vertex> vertexes, std::vector<unsigned int> indices, std::vector<Texture> textures);    
+    Mesh(std::vector<Vertex> vertexes, std::vector<unsigned int> indices, std::vector<Texture> textures, Material material);    
     void m_Draw(ShaderProgram* shader);
     void m_Initialization();
+
+    void m_PrintVertexes();
+    void m_PrintIndices();
 };
 
 #endif

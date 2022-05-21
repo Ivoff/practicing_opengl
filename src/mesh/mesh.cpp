@@ -1,10 +1,11 @@
 #include <mesh/mesh.hpp>
 
-Mesh::Mesh(std::vector<Vertex> vertexes, std::vector<unsigned int> indices, std::vector<Texture> textures)
+Mesh::Mesh(std::vector<Vertex> vertexes, std::vector<unsigned int> indices, std::vector<Texture> textures, Material material)
 {
     m_vertexes = vertexes;
     m_indices = indices;
     m_textures = textures;
+    m_material = material;
 
     m_Initialization();
 }
@@ -22,7 +23,7 @@ void Mesh::m_Initialization()
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*m_vertexes.size(), &m_vertexes[0], GL_DYNAMIC_DRAW);    
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_position));
-    glEnableVertexAttribArray(0);    
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
     glEnableVertexAttribArray(1);    
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tex_coord));
@@ -54,14 +55,43 @@ void Mesh::m_Draw(ShaderProgram* shader)
         {
             uniform_name = uniform_name + "diffuse_" + std::to_string(diffuse_counter++);
         }            
-        glActiveTexture(GL_TEXTURE0);
+        
         shader->m_setUniform(uniform_name, i);        
+        shader->m_setUniform("material.diffuse", m_material.m_diffuse);
+        shader->m_setUniform("material.specular", m_material.m_specular);
+        shader->m_setUniform("material.shininess", m_material.m_shininess);
 
         m_textures[i].m_Activate(GL_TEXTURE0 + i);
-        m_textures[i].m_Bind();
-    }
+        m_textures[i].m_Bind();        
+    }    
+
+    glActiveTexture(GL_TEXTURE0);
     
     glBindVertexArray(m_vao);
-    glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);
+    glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);    
     glBindVertexArray(0);
+}
+
+void Mesh::m_PrintVertexes()
+{    
+    int len = m_vertexes.size();
+    printf("Printing Vertexes:\n");
+    for (int i = 0; i < len; i += 1)
+    {
+        printf("[%d](%f, %f, %f)\n", i, m_vertexes[i].m_position.x, m_vertexes[i].m_position.y, m_vertexes[i].m_position.z);
+        printf("[%d](%f, %f, %f)\n", i, m_vertexes[i].m_normal.x, m_vertexes[i].m_normal.y, m_vertexes[i].m_normal.z);
+        printf("[%d](%f, %f)\n", i, m_vertexes[i].m_tex_coord.x, m_vertexes[i].m_tex_coord.y);
+        printf("\n");
+    }    
+}
+
+void Mesh::m_PrintIndices()
+{        
+    int len = m_indices.size();
+    printf("Printing Indices:\n");
+    for (int i = 0; i < len; i += 3)
+    {
+        printf("[%d](%d, %d, %d)\n", i/3, m_indices[i], m_indices[i+1], m_indices[i+2]);        
+        printf("\n");
+    }    
 }

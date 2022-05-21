@@ -2,8 +2,8 @@
 
 struct Material
 {    
-    sampler2D diffuse;
-    sampler2D specular;
+    vec3 diffuse;
+    vec3 specular;
     float shininess;
 };
 
@@ -52,6 +52,13 @@ uniform Material            material;
 uniform PointLight          point_light;
 uniform DirectionalLight    dir_light;
 
+uniform int                 directional_active;
+
+uniform sampler2D texture_diffuse_0;
+uniform sampler2D texture_diffuse_1;
+uniform sampler2D texture_specular_0;
+uniform sampler2D texture_specular_1;
+
 void main() 
 {
     vec3 directional_result;
@@ -68,41 +75,42 @@ void main()
     directional_light_func(data, directional_result);
     point_light_func(data, point_result);
 
+    if (directional_active == 0)
+    {
+        directional_result = vec3(0.0f, 0.0f, 0.0f);
+    }
+
     frag_color = vec4(point_result + directional_result, 1.0f);
 }
 
 void directional_light_func(in DataLight data, out vec3 result)
 {
-    vec3 ambient = data.directional_light.ambient * texture(material.diffuse, data.tex_coord).rgb;
+    vec3 ambient = data.directional_light.ambient * texture(texture_diffuse_0, data.tex_coord).rgb;
 
     // negando porque o vetor direção da luz direcional é da luz em direção ao fragmento e não do fragmento a luz
     vec3 light_dir = normalize(-data.directional_light.direction); 
-    vec3 diffuse = max(dot(light_dir, data.normal), 0.0f) * 
-                   data.directional_light.diffuse * 
-                   texture(material.diffuse, data.tex_coord).rgb;
+    vec3 diffuse = max(dot(light_dir, data.normal), 0.0f) * data.directional_light.diffuse * material.diffuse * texture(texture_diffuse_0, data.tex_coord).rgb;
 
     vec3 view_dir = normalize(data.camera_pos - data.frag_pos);
     vec3 reflect_dir = reflect(-light_dir, data.normal); // aqui negar denovo para não precisar normalizar o vetor original de novo
-    vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * 
-                    texture(material.specular, data.tex_coord).rgb * 
-                    data.directional_light.specular;
+    vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * material.specular * texture(texture_specular_0, data.tex_coord).rgb * data.directional_light.specular;
 
     result = ambient + diffuse + specular;
 }
 
 void point_light_func(in DataLight data, out vec3 result)
 {
-    vec3 ambient = data.point_light.ambient * texture(material.diffuse, data.tex_coord).rgb;
+    vec3 ambient = data.point_light.ambient * texture(texture_diffuse_0, data.tex_coord).rgb;
 
     vec3 light_dir = normalize(data.point_light.position - data.frag_pos);
-    vec3 diffuse = max(dot(light_dir, data.normal), 0.0f) * data.point_light.diffuse * texture(material.diffuse, data.tex_coord).rgb;
+    vec3 diffuse = max(dot(light_dir, data.normal), 0.0f) * data.point_light.diffuse * material.diffuse * texture(texture_diffuse_0, data.tex_coord).rgb;
     
     vec3 view_dir = normalize(data.camera_pos - data.frag_pos);
     vec3 reflect_dir = reflect(-light_dir, data.normal);    
-    vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * texture(material.specular, data.tex_coord).rgb * data.point_light.specular;
+    vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * material.specular * texture(texture_specular_0, data.tex_coord).rgb * data.point_light.specular;
 
     float distance = length(data.point_light.position - data.frag_pos);
     float attenuation = 1.0f / (data.point_light.constant + data.point_light.linear * distance + data.point_light.quadratic * (distance * distance));
 
-    result = ambient * attenuation + diffuse * attenuation + specular * attenuation;
+    result = (ambient * attenuation) + (diffuse * attenuation) + (specular * attenuation);
 }

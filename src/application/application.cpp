@@ -121,22 +121,47 @@ void Application::m_setup()
         glm::vec3(0.2f, 0.2f, 0.2f),
         glm::vec3(0.60f, 0.60f, 0.60f),
         glm::vec3(0.85f, 0.85f, 0.85f) 
-    );    
-    glm::mat3 normal_mat = glm::mat3(glm::transpose(glm::inverse(m_scene.model_mat)));            
+    );
+    m_scene.directional_active = true;
 
     GLuint vertex_shader = Shader::m_create("shaders/vertex.vert", GL_VERTEX_SHADER);
-    GLuint fragment_shader = Shader::m_create("shaders/lightless_fragment.frag", GL_FRAGMENT_SHADER);     
+    GLuint fragment_shader = Shader::m_create("shaders/fragment.frag", GL_FRAGMENT_SHADER);     
     m_scene.current_program = new ShaderProgram({vertex_shader, fragment_shader});
     m_scene.current_program->m_use();
-
-    m_scene.current_program->m_setUniform("model_mat", m_scene.model_mat);    
+    
+    m_scene.model.m_model_mat = glm::scale(m_scene.model.m_model_mat, glm::vec3(0.02));
+    m_scene.current_program->m_setUniform("model_mat", m_scene.model.m_model_mat);
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-    m_scene.current_program->m_setUniform("normal_mat", normal_mat);
+    m_scene.current_program->m_setUniform("normal_mat", m_scene.model.m_GetNormalMat());
     m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
+    
+    m_scene.current_program->m_setUniform("dir_light.direction", m_scene.directional_light->m_direction);
+    m_scene.current_program->m_setUniform("dir_light.ambient", m_scene.directional_light->m_ambient);
+    m_scene.current_program->m_setUniform("dir_light.diffuse", m_scene.directional_light->m_diffuse);
+    m_scene.current_program->m_setUniform("dir_light.specular", m_scene.directional_light->m_specular);
+    m_scene.current_program->m_setUniform("directional_active", (int)m_scene.directional_active);
 
+    m_scene.current_program->m_setUniform("point_light.position", m_scene.light->m_position);
+    m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
+    m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
+    m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
+    m_scene.current_program->m_setUniform("point_light.constant", m_scene.light->m_constant);
+    m_scene.current_program->m_setUniform("point_light.linear", m_scene.light->m_linear);
+    m_scene.current_program->m_setUniform("point_light.quadratic", m_scene.light->m_quadratic);
+
+    m_scene.lamp_program = new ShaderProgram({
+        Shader::m_create("shaders/lamp.vert", GL_VERTEX_SHADER),
+        Shader::m_create("shaders/lamp.frag", GL_FRAGMENT_SHADER)
+    });    
+    m_scene.lamp_program->m_use();
+    m_scene.lamp.m_model_mat = glm::translate(m_scene.lamp.m_model_mat, m_scene.light->m_position);
+    m_scene.current_program->m_setUniform("model_mat", m_scene.lamp.m_model_mat);
+    m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
+    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
 
     m_scene.model.m_LoadModel(PROJECT_ROOT + std::string("models/sponza/sponza.obj"));
+    m_scene.lamp.m_LoadModel(PROJECT_ROOT + std::string("models/cube/cube.obj"));
 }
 
 void Application::m_update(float delta_time)
@@ -170,7 +195,6 @@ void Application::m_update(float delta_time)
 
     m_scene.current_program->m_use();        
 
-
     glm::mat4 model_mat = glm::scale(
         m_scene.model.m_model_mat, 
         glm::vec3(
@@ -178,7 +202,7 @@ void Application::m_update(float delta_time)
             m_scene.model.m_scale, 
             m_scene.model.m_scale
         )
-    );    
+    );
     m_scene.current_program->m_setUniform("model_mat", model_mat);    
 
     m_scene.camera->m_UpdateProjMat(
@@ -193,10 +217,21 @@ void Application::m_update(float delta_time)
     
     m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
     
+    m_scene.current_program->m_setUniform("directional_active", (int)m_scene.directional_active);
+
     m_scene.current_program->m_setUniform("point_light.position", m_scene.light->m_position);
     m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
     m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
     m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
+
+    m_scene.lamp_program->m_use();
+    m_scene.lamp.m_model_mat[3][0] = m_scene.light->m_position.x;
+    m_scene.lamp.m_model_mat[3][1] = m_scene.light->m_position.y;
+    m_scene.lamp.m_model_mat[3][2] = m_scene.light->m_position.z;
+    glm::mat4 lamp_model_mat = glm::scale(m_scene.lamp.m_model_mat, glm::vec3(m_scene.lamp.m_scale));    
+    m_scene.lamp_program->m_setUniform("model_mat", lamp_model_mat);
+    m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
+    m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
 }
 
 void Application::m_render()
@@ -207,10 +242,12 @@ void Application::m_render()
     m_imgui->m_NewFrame();
 
     ImGui::Begin("Light Properties");
-    ImGui::DragFloat3("Light Position", &m_scene.light->m_position[0], 0.25f, -10.0f, 10.0f, "%.3f");
+    ImGui::Checkbox("Directional Light", &m_scene.directional_active);
+    ImGui::DragFloat3("Light Position", &m_scene.light->m_position[0], 0.25f, -999.0f, 999.0f, "%.3f");
     ImGui::DragFloat3("Light Ambient", &m_scene.light->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
     ImGui::DragFloat3("Light Diffuse", &m_scene.light->m_diffuse[0], 0.05f, 0.0f, 1.0f, "%.2f");
-    ImGui::DragFloat3("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 1.0f, "%.2f");    
+    ImGui::DragFloat3("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 1.0f, "%.2f");
+    ImGui::DragFloat("Light Scale", &m_scene.lamp.m_scale, 0.01f, 0.0f, 10.0f, "%.2f");
     ImGui::End();
 
     ImGui::Begin("Model Properties");
@@ -229,6 +266,7 @@ void Application::m_render()
     ImGui::End();
 
     m_scene.model.m_Draw(m_scene.current_program);
+    m_scene.lamp.m_Draw(m_scene.lamp_program);
 
     m_imgui->m_Render();
 }
