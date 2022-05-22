@@ -29,6 +29,10 @@ void Mesh::m_Initialization()
     glEnableVertexAttribArray(1);    
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tex_coord));
     glEnableVertexAttribArray(2);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_bitangent));
+    glEnableVertexAttribArray(4);
     
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*m_indices.size(), &m_indices[0], GL_STATIC_DRAW);
 
@@ -39,10 +43,17 @@ void Mesh::m_Draw(ShaderProgram* shader)
 {
     unsigned int diffuse_counter = 0;
     unsigned int specular_counter = 0;
+    unsigned int normal_counter = 0;
     int tex_len = m_textures.size();
     std::string uniform_name;
 
     shader->m_use();
+
+    if (tex_len > 16)
+    {
+        printf("Material(%s): tem mais que 16 texturas\n", m_material.m_name.c_str());
+        std::exit(0);
+    }
 
     for (int i = 0; i < tex_len; i += 1)
     {        
@@ -55,6 +66,10 @@ void Mesh::m_Draw(ShaderProgram* shader)
         else if (m_textures[i].m_type == "diffuse")
         {
             uniform_name = uniform_name + "diffuse_" + std::to_string(diffuse_counter++);
+        }
+        else if (m_textures[i].m_type == "normal")
+        {
+            uniform_name = uniform_name + "normal_" + std::to_string(normal_counter++);
         }
         
         shader->m_setUniform(uniform_name, i);

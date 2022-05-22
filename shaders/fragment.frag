@@ -43,6 +43,7 @@ void point_light_func(in DataLight data, out vec3 result);
 in vec3 frag_pos;
 in vec3 normal;
 in vec2 tex_coord;
+in mat3 tbn_mat;
 
 out vec4 frag_color;
 
@@ -58,6 +59,8 @@ uniform sampler2D texture_diffuse_0;
 uniform sampler2D texture_diffuse_1;
 uniform sampler2D texture_specular_0;
 uniform sampler2D texture_specular_1;
+uniform sampler2D texture_normal_0;
+uniform sampler2D texture_normal_1;
 
 void main() 
 {
@@ -71,6 +74,10 @@ void main()
     data.camera_pos = camera_pos;
     data.normal = normal;
     data.frag_pos = frag_pos;
+
+    data.normal = texture(texture_normal_0, tex_coord).rgb;
+    data.normal = data.normal * 2.0f - 1.0f;
+    data.normal = normalize(tbn_mat * data.normal);
 
     directional_light_func(data, directional_result);
     point_light_func(data, point_result);

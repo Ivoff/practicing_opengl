@@ -19,7 +19,7 @@ Model::Model(std::string path)
 void Model::m_LoadModel(std::string path)
 {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
     if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !scene->mRootNode)
     {
@@ -75,6 +75,14 @@ Mesh Model::m_ProcessMesh(aiMesh* mesh, const aiScene* scene)
         vertex.m_normal.y = mesh->mNormals[i].y;
         vertex.m_normal.z = mesh->mNormals[i].z;
 
+        vertex.m_tangent.x = mesh->mTangents[i].x;
+        vertex.m_tangent.y = mesh->mTangents[i].y;
+        vertex.m_tangent.z = mesh->mTangents[i].z;
+        
+        vertex.m_bitangent.x = mesh->mBitangents[i].x;
+        vertex.m_bitangent.y = mesh->mBitangents[i].y;
+        vertex.m_bitangent.z = mesh->mBitangents[i].z;
+
         if (mesh->mTextureCoords[0])
         {
             vertex.m_tex_coord.x = mesh->mTextureCoords[0][i].x;
@@ -128,7 +136,21 @@ Mesh Model::m_ProcessMesh(aiMesh* mesh, const aiScene* scene)
         else
         {
             output_mesh.m_textures.insert(output_mesh.m_textures.end(), specular_maps.begin(), specular_maps.end());
-        }        
+        }
+
+        std::vector<Texture> normal_maps = m_LoadMaterialTexture(ai_material, aiTextureType_NORMALS, "normal");
+        if (normal_maps.size() == 0)
+        {
+            Texture normal_tex;
+            normal_tex = normal_tex.BlackTex();
+            normal_tex.m_type = "normal";
+            normal_tex.m_path = "[Null]";
+            output_mesh.m_textures.push_back(normal_tex);
+        }
+        else
+        {
+            output_mesh.m_textures.insert(output_mesh.m_textures.end(), normal_maps.begin(), normal_maps.end());
+        } 
 
         Material material = Material(glm::vec3(1.0f), glm::vec3(1.0f), 10.0f);
         aiColor3D ai_color;
@@ -219,7 +241,7 @@ std::vector<Texture> Model::m_LoadMaterialTexture(aiMaterial* material, aiTextur
             texture.m_type = type_name;
             texture.m_path = texture_path;
             m_textures_loaded.push_back(texture);
-            
+
             textures.push_back(texture);
         }        
     }

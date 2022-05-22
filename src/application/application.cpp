@@ -230,10 +230,17 @@ void Application::m_update(float delta_time)
     
     m_scene.current_program->m_setUniform("directional_active", (int)m_scene.directional_active);
 
+
     m_scene.current_program->m_setUniform("point_light.position", m_scene.light->m_position);
+    m_scene.light->m_ambient = glm::vec3(m_scene.light->m_ambient[0]);
+    m_scene.light->m_diffuse = glm::vec3(m_scene.light->m_diffuse[0]);
+    m_scene.light->m_specular = glm::vec3(m_scene.light->m_specular[0]);
     m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
     m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
     m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
+    m_scene.current_program->m_setUniform("point_light.constant", m_scene.light->m_constant);
+    m_scene.current_program->m_setUniform("point_light.linear", m_scene.light->m_linear);
+    m_scene.current_program->m_setUniform("point_light.quadratic", m_scene.light->m_quadratic);
 
     m_scene.lamp_program->m_use();
     m_scene.lamp.m_model_mat[3][0] = m_scene.light->m_position.x;
@@ -260,10 +267,13 @@ void Application::m_render()
     ImGui::Begin("Light Properties");
     ImGui::Checkbox("Directional Light", &m_scene.directional_active);
     ImGui::DragFloat3("Light Position", &m_scene.light->m_position[0], 0.25f, -999.0f, 999.0f, "%.3f");
-    ImGui::DragFloat3("Light Ambient", &m_scene.light->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
-    ImGui::DragFloat3("Light Diffuse", &m_scene.light->m_diffuse[0], 0.05f, 0.0f, 1.0f, "%.2f");
-    ImGui::DragFloat3("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 1.0f, "%.2f");
+    ImGui::DragFloat("Light Ambient", &m_scene.light->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
+    ImGui::DragFloat("Light Diffuse", &m_scene.light->m_diffuse[0], 0.05f, 0.0f, 5.0f, "%.2f");
+    ImGui::DragFloat("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 5.0f, "%.2f");
     ImGui::DragFloat("Light Scale", &m_scene.lamp.m_scale, 0.01f, 0.0f, 10.0f, "%.2f");
+    ImGui::DragFloat("Constant Attenuation", &m_scene.light->m_constant, 0.0001f, 0.0001f, 5.0f, "%.4f");
+    ImGui::DragFloat("Linear Attenuation", &m_scene.light->m_linear, 0.0001f, 0.0001f, 5.0f, "%.4f");
+    ImGui::DragFloat("Quadratic Attenuation", &m_scene.light->m_quadratic, 0.0001f, 0.0001f, 5.0f, "%.4f");
     ImGui::End();
 
     ImGui::Begin("Model Properties");
