@@ -1,9 +1,14 @@
-## Executar
+## Setup
 ```
 sudo chmod u+x ./setup.sh
 ./setup.sh
 export LD_LIBRARY_PATH=./lib
 ```
+## Executar
+```
+make && make run
+```
+
 ## Variáveis de ambiente
 Todas já tem valor default mas podem ser alteradas
 ```
