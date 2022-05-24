@@ -20,7 +20,7 @@ struct Texture
     std::string m_path;
 
     Texture(){};
-    Texture(std::string path, GLuint target);
+    Texture(std::string path, GLuint target, bool flip);
     void m_SetWrapping(GLuint axis, GLuint wrapping);
     void m_SetFiltering(GLuint filtering, GLuint scale);
     void m_GenTex(bool auto_mipmap);

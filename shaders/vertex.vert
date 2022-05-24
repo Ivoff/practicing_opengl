@@ -19,13 +19,14 @@ uniform mat3 normal_mat;
 
 void main() 
 {
+    normal = normalize(normal_mat * p_normal);
+
     tbn_mat = mat3(
         normalize((model_mat * vec4(p_tangent, 0.0f)).xyz),
         normalize((model_mat * vec4(p_bitangent, 0.0f)).xyz),
-        normalize((model_mat * vec4(p_normal, 0.0f)).xyz)
+        normalize((model_mat * vec4(normal, 0.0f)).xyz)
     );
-    
-    normal = normalize(normal_mat * p_normal);
+        
     frag_pos = (model_mat * vec4(vert_data, 1.0f)).xyz;
     tex_coord = p_tex_coord;
 

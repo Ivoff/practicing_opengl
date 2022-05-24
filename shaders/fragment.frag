@@ -71,8 +71,7 @@ void main()
     data.directional_light = dir_light;
     data.point_light = point_light;
     data.tex_coord = tex_coord;
-    data.camera_pos = camera_pos;
-    data.normal = normal;
+    data.camera_pos = camera_pos;    
     data.frag_pos = frag_pos;
 
     data.normal = texture(texture_normal_0, tex_coord).rgb;
@@ -114,7 +113,7 @@ void point_light_func(in DataLight data, out vec3 result)
     
     vec3 view_dir = normalize(data.camera_pos - data.frag_pos);
     vec3 reflect_dir = reflect(-light_dir, data.normal);    
-    vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * material.specular * texture(texture_specular_0, data.tex_coord).rgb * data.point_light.specular;
+    vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * material.specular * vec3(texture(texture_specular_0, data.tex_coord).r) * data.point_light.specular;
 
     float distance = length(data.point_light.position - data.frag_pos);
     float attenuation = 1.0f / (data.point_light.constant + data.point_light.linear * distance + data.point_light.quadratic * (distance * distance));

@@ -1,6 +1,6 @@
 #include <texture/texture.hpp>
 
-Texture::Texture(std::string path, GLuint target)
+Texture::Texture(std::string path, GLuint target, bool flip)
 {
     m_target = target;    
     m_tex_unit = -1;
@@ -9,7 +9,7 @@ Texture::Texture(std::string path, GLuint target)
     {
         path = PROJECT_ROOT + path;
     }        
-    // stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(flip);
     m_data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
     
     if (!m_data)
@@ -88,13 +88,13 @@ void Texture::m_DefaultConfig()
 
 Texture Texture::WhiteTex()
 {
-    static Texture white_tex = Texture("textures/white.jpg", GL_TEXTURE_2D);
+    static Texture white_tex = Texture("textures/white.jpg", GL_TEXTURE_2D, false);
     return white_tex;
 }
 
 Texture Texture::BlackTex()
 {
-    static Texture black_tex = Texture("textures/black.jpg", GL_TEXTURE_2D);
+    static Texture black_tex = Texture("textures/black.jpg", GL_TEXTURE_2D, false);
     return black_tex;
 }
 

@@ -4,16 +4,18 @@ Model::Model()
 {
     m_model_mat = glm::mat4(1.0f);
     m_normal_mat = glm::mat3(1.0f);
-    m_scale = 1.0f;    
+    m_scale = 1.0f;
+    m_flip_tex = false;
 }
 
-Model::Model(std::string path)
+Model::Model(std::string path, bool flip)
 {
     m_LoadModel(path);
 
     m_model_mat = glm::mat4(1.0f);
     m_normal_mat = glm::mat3(1.0f);
     m_scale = 1.0f;
+    m_flip_tex = flip;
 }
 
 void Model::m_LoadModel(std::string path)
@@ -237,7 +239,7 @@ std::vector<Texture> Model::m_LoadMaterialTexture(aiMaterial* material, aiTextur
 
         if (!skip)
         {
-            Texture texture = Texture(texture_path, GL_TEXTURE_2D);
+            Texture texture = Texture(texture_path, GL_TEXTURE_2D, m_flip_tex);
             texture.m_type = type_name;
             texture.m_path = texture_path;
             m_textures_loaded.push_back(texture);

@@ -2,6 +2,7 @@
 ```
 sudo chmod u+x ./setup.sh
 ./setup.sh
+export LD_LIBRARY_PATH=./lib
 ```
 ## Variáveis de ambiente
 Todas já tem valor default mas podem ser alteradas

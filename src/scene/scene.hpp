@@ -25,6 +25,7 @@ struct Scene
     PointLight* light;
     float scale;
     bool directional_active;
+    int map_type;
     
     void destroy();
 };

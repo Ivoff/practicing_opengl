@@ -22,10 +22,11 @@ struct Model
     std::string m_directory;
     glm::mat4 m_model_mat;
     glm::mat3 m_normal_mat;
-    float m_scale;    
+    float m_scale;
+    bool m_flip_tex;
 
     Model();
-    Model(std::string path);
+    Model(std::string path, bool flip);
     void m_Draw(ShaderProgram* shader);
     void m_LoadModel(std::string path);
     void m_ProcessNode(aiNode* node, const aiScene* scene);

@@ -104,7 +104,8 @@ Application::~Application() {
 
 void Application::m_setup()
 {
-    glEnable(GL_DEPTH_TEST);    
+    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_CULL_FACE);
 
     m_scene.camera = new Camera(90.0f, 0.1f, 100.0f, m_window->m_width, m_window->m_height);    
     m_scene.light = new PointLight(
@@ -123,6 +124,7 @@ void Application::m_setup()
         glm::vec3(0.85f, 0.85f, 0.85f) 
     );
     m_scene.directional_active = true;
+    m_scene.map_type = 1;
 
     GLuint vertex_shader = Shader::m_create("shaders/vertex.vert", GL_VERTEX_SHADER);
     GLuint fragment_shader = Shader::m_create("shaders/fragment.frag", GL_FRAGMENT_SHADER);     
@@ -130,7 +132,7 @@ void Application::m_setup()
     m_scene.current_program->m_selected = true;
     m_scene.current_program->m_use();
     
-    m_scene.model.m_model_mat = glm::scale(m_scene.model.m_model_mat, glm::vec3(0.02));
+    // m_scene.model.m_model_mat = glm::scale(m_scene.model.m_model_mat, glm::vec3(0.02));
     m_scene.current_program->m_setUniform("model_mat", m_scene.model.m_model_mat);
     m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
@@ -160,6 +162,7 @@ void Application::m_setup()
     m_scene.lightless_program->m_setUniform("model_mat", m_scene.lamp.m_model_mat);
     m_scene.lightless_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.lightless_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
+    m_scene.lightless_program->m_setUniform("map_type", m_scene.map_type);
 
     m_scene.lamp_program = new ShaderProgram({
         Shader::m_create("shaders/lamp.vert", GL_VERTEX_SHADER),
@@ -170,7 +173,7 @@ void Application::m_setup()
     m_scene.lamp_program->m_setUniform("model_mat", m_scene.lamp.m_model_mat);
     m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);    
-
+        
     m_scene.model.m_LoadModel(PROJECT_ROOT + std::string("models/sponza/sponza.obj"));
     m_scene.lamp.m_LoadModel(PROJECT_ROOT + std::string("models/cube/cube.obj"));
 }
@@ -255,6 +258,7 @@ void Application::m_update(float delta_time)
     m_scene.lightless_program->m_setUniform("model_mat", model_mat);
     m_scene.lightless_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
     m_scene.lightless_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
+    m_scene.lightless_program->m_setUniform("map_type", m_scene.map_type);
 }
 
 void Application::m_render()
@@ -307,7 +311,8 @@ void Application::m_render()
             m_scene.illumination_program->m_selected = false;
         }        
         ImGui::EndMenu();
-    }        
+    }
+    ImGui::SliderInt("Map Type", &m_scene.map_type, 1, 3);
     ImGui::End();
 
     ImGui::ShowDemoWindow();
@@ -321,7 +326,11 @@ void Application::m_render()
 void Application::m_KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     Application& app = *((Application*) glfwGetWindowUserPointer(window));
-    app.m_keyboard->m_Input(*(app.m_keyboard), key, scancode, action, mods);
+    
+    if (!app.m_imgui->m_io->WantCaptureKeyboard)
+    {
+        app.m_keyboard->m_Input(*(app.m_keyboard), key, scancode, action, mods);
+    }    
 }
 
 // Mouse movement

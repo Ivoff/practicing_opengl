@@ -355,7 +355,7 @@ newmtl vase
 	Ke 0.0000 0.0000 0.0000
 	map_Ka textures\vase_dif.png
 	map_Kd textures\vase_dif.png
-	map_Kn textures/vase_hanging_ddn.tga
+	map_Kn textures/vase_ddn.tga
 	map_bump textures\vase_bump.png
 
 newmtl Material__25
