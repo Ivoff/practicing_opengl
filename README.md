@@ -1,3 +1,7 @@
+## Requerimentos
+* cmake
+* xorg-dev
+
 ## Setup
 ```
 sudo chmod u+x ./setup.sh
