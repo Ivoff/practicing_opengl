@@ -105,220 +105,81 @@ Application::~Application() {
 void Application::m_setup()
 {
     glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
+    glDepthRange(0.0, 1.0);
 
-    m_scene.camera = new Camera(90.0f, 0.1f, 100.0f, m_window->m_width, m_window->m_height);    
-    m_scene.light = new PointLight(
-        glm::vec3(-2.0f, 2.0f, -2.0f),
-        glm::vec3(0.2f, 0.2f, 0.2f),
-        glm::vec3(0.5f, 0.5f, 0.5f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        1.0f,
-        0.09f,
-        0.032f
-    );    
-    m_scene.directional_light = new DirectionalLight(
-        glm::vec3(-1.0f, -1.0f, -0.5f),
-        glm::vec3(0.2f, 0.2f, 0.2f),
-        glm::vec3(0.60f, 0.60f, 0.60f),
-        glm::vec3(0.85f, 0.85f, 0.85f) 
-    );
+    m_scene.SetupCamera(m_window->m_width, m_window->m_height);
+    m_scene.SetupPointLight(); 
+    m_scene.SetupDirLight();
+
     m_scene.directional_active = true;
     m_scene.map_type = 1;
+    m_scene.shadow_map_bias = 0.05f;
 
-    GLuint vertex_shader = Shader::m_create("shaders/vertex.vert", GL_VERTEX_SHADER);
-    GLuint fragment_shader = Shader::m_create("shaders/fragment.frag", GL_FRAGMENT_SHADER);     
-    m_scene.current_program = new ShaderProgram({vertex_shader, fragment_shader});
-    m_scene.current_program->m_selected = true;
-    m_scene.current_program->m_use();
-    
-    // m_scene.model.m_model_mat = glm::scale(m_scene.model.m_model_mat, glm::vec3(0.02));
-    m_scene.current_program->m_setUniform("model_mat", m_scene.model.m_model_mat);
-    m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-    m_scene.current_program->m_setUniform("normal_mat", m_scene.model.m_GetNormalMat());
-    m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
-    
-    m_scene.current_program->m_setUniform("dir_light.direction", m_scene.directional_light->m_direction);
-    m_scene.current_program->m_setUniform("dir_light.ambient", m_scene.directional_light->m_ambient);
-    m_scene.current_program->m_setUniform("dir_light.diffuse", m_scene.directional_light->m_diffuse);
-    m_scene.current_program->m_setUniform("dir_light.specular", m_scene.directional_light->m_specular);
-    m_scene.current_program->m_setUniform("directional_active", (int)m_scene.directional_active);
+    m_scene.LoadModels();
 
-    m_scene.current_program->m_setUniform("point_light.position", m_scene.light->m_position);
-    m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
-    m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
-    m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
-    m_scene.current_program->m_setUniform("point_light.constant", m_scene.light->m_constant);
-    m_scene.current_program->m_setUniform("point_light.linear", m_scene.light->m_linear);
-    m_scene.current_program->m_setUniform("point_light.quadratic", m_scene.light->m_quadratic);
-    m_scene.illumination_program = m_scene.current_program;
-
-    m_scene.lightless_program = new ShaderProgram({
-        vertex_shader,
-        Shader::m_create("shaders/lightless_fragment.frag", GL_FRAGMENT_SHADER)
-    });
-    m_scene.lightless_program->m_use();
-    m_scene.lightless_program->m_setUniform("model_mat", m_scene.lamp.m_model_mat);
-    m_scene.lightless_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.lightless_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-    m_scene.lightless_program->m_setUniform("map_type", m_scene.map_type);
-
-    m_scene.lamp_program = new ShaderProgram({
-        Shader::m_create("shaders/lamp.vert", GL_VERTEX_SHADER),
-        Shader::m_create("shaders/lamp.frag", GL_FRAGMENT_SHADER)
-    });
-    m_scene.lamp_program->m_use();
-    m_scene.lamp.m_model_mat = glm::translate(m_scene.lamp.m_model_mat, m_scene.light->m_position);
-    m_scene.lamp_program->m_setUniform("model_mat", m_scene.lamp.m_model_mat);
-    m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);    
+    m_scene.SetupIlluminationProgram();
+    m_scene.IlluminationProgramUniforms();    
+    m_scene.programs["current_program"] = m_scene.programs["illumination_program"];
         
-    m_scene.model.m_LoadModel(PROJECT_ROOT + std::string("models/sponza/sponza.obj"));
-    m_scene.lamp.m_LoadModel(PROJECT_ROOT + std::string("models/cube/cube.obj"));
+    m_scene.SetupLightlessProgram();
+    m_scene.LightlessProgramUniforms();
+        
+    m_scene.SetupLampProgram();
+    m_scene.LampProgramUniforms();
+                
+    m_scene.ShadowFramebufferSetup();
+    m_scene.DirLightCameraSetup();
+    m_scene.SetupShadowProgram();    
+    m_scene.ShadowProgramUniforms();
+    m_scene.ShadowThumbnailSetup();
+    
+    m_scene.TestProgram();
+    m_scene.TestFrameBuffer(512, 512);
+    m_scene.TestProgram2();
+    m_scene.TestFrameBuffer2(512, 512);
 }
 
 void Application::m_update(float delta_time)
 {
-    if (m_keyboard->m_Pressed('w'))
-    {
-        m_scene.camera->m_position += delta_time * m_scene.camera->m_speed * m_scene.camera->m_front;
-    }
-    if (m_keyboard->m_Pressed('s'))
-    {
-        m_scene.camera->m_position -= delta_time * m_scene.camera->m_speed * m_scene.camera->m_front;
-    }
-    if (m_keyboard->m_Pressed('a'))
-    {
-        m_scene.camera->m_position -= delta_time * m_scene.camera->m_speed * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
-    }
-    if (m_keyboard->m_Pressed('d'))
-    {
-        m_scene.camera->m_position += delta_time * m_scene.camera->m_speed * glm::normalize(glm::cross(m_scene.camera->m_front, m_scene.camera->m_up));
-    }
-    if (m_keyboard->m_Pressed(15)) // SHIFT
-    {
-        m_scene.camera->m_position += delta_time * m_scene.camera->m_speed * glm::vec3(0, 1, 0);
-    }
-    if (m_keyboard->m_Pressed(7)) // CTRL
-    {
-        m_scene.camera->m_position += delta_time * (-m_scene.camera->m_speed) * glm::vec3(0, 1, 0);
-    }
+    m_scene.CurrentCameraUpdate(m_keyboard, delta_time);
 
-    m_scene.camera->m_LookAt(m_scene.camera->m_front);
+    m_scene.CurrentProgramUpdate();
 
-    m_scene.current_program->m_use();        
+    m_scene.DirLightUpdate();
 
-    glm::mat4 model_mat = glm::scale(
-        m_scene.model.m_model_mat, 
-        glm::vec3(
-            m_scene.model.m_scale, 
-            m_scene.model.m_scale, 
-            m_scene.model.m_scale
-        )
-    );
-    m_scene.current_program->m_setUniform("model_mat", model_mat);    
+    m_scene.IlluminationProgramUniforms();
 
-    m_scene.camera->m_UpdateProjMat(
-        m_scene.camera->m_fov,
-        m_scene.camera->m_near,
-        m_scene.camera->m_far,
-        m_scene.camera->m_width, 
-        m_scene.camera->m_height
-    );
-    m_scene.current_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.current_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-    
-    m_scene.current_program->m_setUniform("camera_pos", m_scene.camera->m_position);
-    
-    m_scene.current_program->m_setUniform("directional_active", (int)m_scene.directional_active);
+    m_scene.LampUpdate();
 
+    m_scene.LightlessProgramUniforms();
 
-    m_scene.current_program->m_setUniform("point_light.position", m_scene.light->m_position);
-    m_scene.light->m_ambient = glm::vec3(m_scene.light->m_ambient[0]);
-    m_scene.light->m_diffuse = glm::vec3(m_scene.light->m_diffuse[0]);
-    m_scene.light->m_specular = glm::vec3(m_scene.light->m_specular[0]);
-    m_scene.current_program->m_setUniform("point_light.ambient", m_scene.light->m_ambient);
-    m_scene.current_program->m_setUniform("point_light.diffuse", m_scene.light->m_diffuse);
-    m_scene.current_program->m_setUniform("point_light.specular", m_scene.light->m_specular);
-    m_scene.current_program->m_setUniform("point_light.constant", m_scene.light->m_constant);
-    m_scene.current_program->m_setUniform("point_light.linear", m_scene.light->m_linear);
-    m_scene.current_program->m_setUniform("point_light.quadratic", m_scene.light->m_quadratic);
+    m_scene.ShadowProgramUniforms();
 
-    m_scene.lamp_program->m_use();
-    m_scene.lamp.m_model_mat[3][0] = m_scene.light->m_position.x;
-    m_scene.lamp.m_model_mat[3][1] = m_scene.light->m_position.y;
-    m_scene.lamp.m_model_mat[3][2] = m_scene.light->m_position.z;
-    glm::mat4 lamp_model_mat = glm::scale(m_scene.lamp.m_model_mat, glm::vec3(m_scene.lamp.m_scale));    
-    m_scene.lamp_program->m_setUniform("model_mat", lamp_model_mat);
-    m_scene.lamp_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.lamp_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-
-    m_scene.lightless_program->m_use();
-    m_scene.lightless_program->m_setUniform("model_mat", model_mat);
-    m_scene.lightless_program->m_setUniform("view_mat", m_scene.camera->m_view_mat);
-    m_scene.lightless_program->m_setUniform("proj_mat", m_scene.camera->m_proj_mat);
-    m_scene.lightless_program->m_setUniform("map_type", m_scene.map_type);
+    m_scene.UpdateModels();
 }
 
 void Application::m_render()
 {
-    glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
-    
     m_imgui->m_NewFrame();
 
-    ImGui::Begin("Light Properties");
-    ImGui::Checkbox("Directional Light", &m_scene.directional_active);
-    ImGui::DragFloat3("Light Position", &m_scene.light->m_position[0], 0.25f, -999.0f, 999.0f, "%.3f");
-    ImGui::DragFloat("Light Ambient", &m_scene.light->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
-    ImGui::DragFloat("Light Diffuse", &m_scene.light->m_diffuse[0], 0.05f, 0.0f, 5.0f, "%.2f");
-    ImGui::DragFloat("Light Specular", &m_scene.light->m_specular[0], 0.05f, 0.0f, 5.0f, "%.2f");
-    ImGui::DragFloat("Light Scale", &m_scene.lamp.m_scale, 0.01f, 0.0f, 10.0f, "%.2f");
-    ImGui::DragFloat("Constant Attenuation", &m_scene.light->m_constant, 0.0001f, 0.0001f, 5.0f, "%.4f");
-    ImGui::DragFloat("Linear Attenuation", &m_scene.light->m_linear, 0.0001f, 0.0001f, 5.0f, "%.4f");
-    ImGui::DragFloat("Quadratic Attenuation", &m_scene.light->m_quadratic, 0.0001f, 0.0001f, 5.0f, "%.4f");
-    ImGui::End();
+    m_scene.SceneGui(m_mouse);
+    m_scene.SceneDebugGui();
 
-    ImGui::Begin("Model Properties");
-    ImGui::DragFloat("Model Scale", &m_scene.model.m_scale, 0.001f, 0.0f, 5.0f, "%.3f");
-    ImGui::End();
+    m_scene.RenderShadowFramebuffer();
 
-    ImGui::Begin("Camera Properties");
-    ImGui::DragFloat("Near Plane", &m_scene.camera->m_near, 0.01f, 0.0f, 100000.0f, "%.2f");
-    ImGui::DragFloat("Far Plane", &m_scene.camera->m_far, 10.0f, 0.0f, 100000.0f, "%.2f");
-    ImGui::DragFloat("FOV", &m_scene.camera->m_fov, 1.0f, 0.0f, 180.0f, "%.2f");
-    ImGui::End();
+    m_scene.RenderShadowThumbnailFramebuffer();
 
-    ImGui::Begin("Control Properties");    
-    ImGui::DragFloat("Move Speed", &m_scene.camera->m_speed, 0.05f, 0.0f, 100.0f, "%.2f");    
-    ImGui::DragFloat("Mouse Sensibility", &m_mouse->m_sensitivity, 0.001f, 0.0f, 5.0f, "%.3f");
-    ImGui::End();
-
-    ImGui::Begin("Scene Properties");    
-    if (ImGui::BeginMenu("Current Shader"))
-    {        
-        if (ImGui::MenuItem("illumination_program", "", &m_scene.illumination_program->m_selected))
-        {
-            m_scene.current_program = m_scene.illumination_program;
-            m_scene.illumination_program->m_selected = true;
-            m_scene.lightless_program->m_selected = false;
-        } 
-        if (ImGui::MenuItem("lightless_program", "", &m_scene.lightless_program->m_selected))
-        {
-            m_scene.current_program = m_scene.lightless_program;
-            m_scene.lightless_program->m_selected = true;
-            m_scene.illumination_program->m_selected = false;
-        }        
-        ImGui::EndMenu();
+    glViewport(0, 0, m_window->m_width, m_window->m_height);
+    glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    for (auto i = m_scene.models.begin(); i != m_scene.models.end(); i++)
+    {
+        if (i->second->m_shader == nullptr)
+            i->second->m_Draw(m_scene.programs["current_program"]);
+        else
+            i->second->m_Draw(i->second->m_shader);
     }
-    ImGui::SliderInt("Map Type", &m_scene.map_type, 1, 3);
-    ImGui::End();
-
-    ImGui::ShowDemoWindow();
-
-    m_scene.model.m_Draw(m_scene.current_program);
-    m_scene.lamp.m_Draw(m_scene.lamp_program);
 
     m_imgui->m_Render();
 }
@@ -339,7 +200,7 @@ void Application::m_MouseCallback(GLFWwindow* window, double x, double y)
     Application& app = *((Application*) glfwGetWindowUserPointer(window));
     if (!app.m_imgui->m_io->WantCaptureMouse && app.m_mouse->m_pressed["right"])
     {
-        app.m_mouse->m_Input(*(app.m_mouse), *(app.m_scene.camera), x, y);
+        app.m_mouse->m_Input(*(app.m_mouse), *(app.m_scene.cameras["current_camera"]), x, y);
     }        
 }
 
@@ -358,10 +219,10 @@ void Application::m_WindowResizeCallback(GLFWwindow* window, int width, int heig
     app->m_window->m_width = width;
     app->m_window->m_height = height;    
 
-    app->m_scene.camera->m_UpdateProjMat(
-        app->m_scene.camera->m_fov, 
-        app->m_scene.camera->m_near, 
-        app->m_scene.camera->m_far, 
+    app->m_scene.cameras["current_camera"]->m_UpdateProjMat(
+        app->m_scene.cameras["current_camera"]->m_fov, 
+        app->m_scene.cameras["current_camera"]->m_near, 
+        app->m_scene.cameras["current_camera"]->m_far, 
         width, 
         height
     );

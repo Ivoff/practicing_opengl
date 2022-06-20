@@ -39,21 +39,26 @@ struct DataLight
 
 void directional_light_func(in DataLight data, out vec3 result);
 void point_light_func(in DataLight data, out vec3 result);
+float shadow_func(in vec4 light_frag_pos);
 
 in vec3 frag_pos;
 in vec3 normal;
 in vec2 tex_coord;
 in mat3 tbn_mat;
+in vec4 light_frag_pos;
 
 out vec4 frag_color;
 
 uniform vec3 camera_pos;
 
-uniform Material            material;
-uniform PointLight          point_light;
-uniform DirectionalLight    dir_light;
+uniform Material material;
+uniform PointLight point_light;
+uniform DirectionalLight dir_light;
 
-uniform int                 directional_active;
+uniform int directional_active;
+
+uniform float shadow_map_bias;
+uniform int shadow_enable;
 
 uniform sampler2D texture_diffuse_0;
 uniform sampler2D texture_diffuse_1;
@@ -61,6 +66,7 @@ uniform sampler2D texture_specular_0;
 uniform sampler2D texture_specular_1;
 uniform sampler2D texture_normal_0;
 uniform sampler2D texture_normal_1;
+uniform sampler2D shadow_map;
 
 void main() 
 {
@@ -101,7 +107,13 @@ void directional_light_func(in DataLight data, out vec3 result)
     vec3 reflect_dir = reflect(-light_dir, data.normal); // aqui negar denovo para não precisar normalizar o vetor original de novo
     vec3 specular = pow(max(dot(view_dir, reflect_dir), 0.0f), material.shininess) * material.specular * texture(texture_specular_0, data.tex_coord).rgb * data.directional_light.specular;
 
-    result = ambient + diffuse + specular;
+    float shadow = 1.0f;
+    if (shadow_enable == 1)
+    {
+        shadow = shadow_func(light_frag_pos);
+    }        
+
+    result = ambient + shadow * (diffuse + specular);
 }
 
 void point_light_func(in DataLight data, out vec3 result)
@@ -119,4 +131,26 @@ void point_light_func(in DataLight data, out vec3 result)
     float attenuation = 1.0f / (data.point_light.constant + data.point_light.linear * distance + data.point_light.quadratic * (distance * distance));
 
     result = (ambient * attenuation) + (diffuse * attenuation) + (specular * attenuation);
+}
+
+float shadow_func(in vec4 light_frag_pos)
+{
+    light_frag_pos = light_frag_pos / light_frag_pos.w;
+    light_frag_pos = light_frag_pos * 0.5f + 0.5f;
+    
+    if (light_frag_pos.z > 1.0f)
+    {
+        light_frag_pos.z = 1.0f;
+    }
+
+    float depth = texture(shadow_map, light_frag_pos.xy).r;
+
+    if ((depth + shadow_map_bias) < light_frag_pos.z)
+    {
+        return 0.0f;
+    } 
+    else
+    {
+        return 1.0f;
+    }    
 }

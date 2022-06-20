@@ -31,7 +31,7 @@ struct Mesh
 
     Mesh(){};
     Mesh(std::vector<Vertex> vertexes, std::vector<unsigned int> indices, std::vector<Texture> textures, Material material);    
-    void m_Draw(ShaderProgram* shader);
+    void m_Draw(ShaderProgram* shader, glm::mat4 model_mat, glm::mat3 normal_mat);
     void m_Initialization();
 
     void m_PrintVertexes();

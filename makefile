@@ -16,7 +16,8 @@ OBJS = 	src/*.cpp \
 		src/light/directional/light_directional.cpp \
 		src/light/point/light_point.cpp \
 		src/mesh/mesh.cpp \
-		src/model/model.cpp
+		src/model/model.cpp \
+		src/framebuffer/framebuffer.cpp
 
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc -Iinclude/imgui

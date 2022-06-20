@@ -1,13 +1,4 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <camera/camera.hpp>
-#include <glm/gtx/string_cast.hpp>
 #include <application/application.hpp>
-#include <chrono>
-#include <thread>
 
 int main()
 {

@@ -39,7 +39,7 @@ void Mesh::m_Initialization()
     glBindVertexArray(0);
 }
 
-void Mesh::m_Draw(ShaderProgram* shader)
+void Mesh::m_Draw(ShaderProgram* shader, glm::mat4 model_mat, glm::mat3 normal_mat)
 {
     unsigned int diffuse_counter = 0;
     unsigned int specular_counter = 0;
@@ -79,7 +79,10 @@ void Mesh::m_Draw(ShaderProgram* shader)
         
         m_textures[i].m_Activate(GL_TEXTURE0 + i);
         m_textures[i].m_Bind();        
-    }    
+    }
+    
+    shader->m_setUniform("model_mat", model_mat);
+    shader->m_setUniform("normal_mat", normal_mat);
     
     glBindVertexArray(m_vao);
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);    

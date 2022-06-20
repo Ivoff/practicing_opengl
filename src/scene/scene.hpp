@@ -11,22 +11,86 @@
 #include <light/directional/light_directional.hpp>
 #include <light/point/light_point.hpp>
 #include <model/model.hpp>
+#include <framebuffer/framebuffer.hpp>
+#include <application/keyboard/keyboard.hpp>
+#include <application/imgui_wrapper/imgui_wrapper.hpp>
+#include <application/mouse/mouse.hpp>
+#include <stdlib.h>
+#include <time.h>
+
 
 struct Scene
 {
-    ShaderProgram* current_program;    
-    ShaderProgram* lamp_program;
-    ShaderProgram* lightless_program;
-    ShaderProgram* illumination_program;
-    Camera* camera;    
-    DirectionalLight* directional_light;    
-    Model model;
-    Model lamp;
-    PointLight* light;
+    std::unordered_map<std::string, Camera*> cameras;
+    std::unordered_map<std::string, ShaderProgram*> programs;
+    std::unordered_map<std::string, DirectionalLight*> dir_lights;
+    std::unordered_map<std::string, PointLight*> point_lights;
+    std::unordered_map<std::string, Model*> models;
+    std::unordered_map<std::string, FrameBuffer*> framebuffers;
+    std::unordered_map<std::string, Texture*> textures;
+
     float scale;
     bool directional_active;
     int map_type;
+    int current_camera_index{0};    
+    float shadow_map_bias;
+    bool shadow_enable{false};
+    // glm::mat4 light_view_mat;
+    // glm::mat4 light_proj_mat;
+
+    bool dir_light_lock_ambient{false};
+    float ambient_light_increment;
+
+    Camera* GetCurrentCamera();
     
+    void SetupShadowProgram();
+    void ShadowFramebufferSetup();
+    void ShadowThumbnailSetup();
+    void ShadowProgramUniforms();
+
+    void SetupDirLight();
+    void DirLightCameraSetup();
+    void CameraDirLightUpdate();
+    void DirLightUpdate();
+
+    void SetupPointLight();
+
+    void SetupIlluminationProgram();
+    void IlluminationProgramUniforms();
+
+    void SetupLightlessProgram();
+    void LightlessProgramUniforms();    
+
+    void SetupLampProgram();
+    void LampProgramUniforms();
+    void LampUpdate();
+    void PointLightUpdate();
+
+    void LoadModels();
+    void UpdateModels();
+
+    void RenderShadowFramebuffer();
+    void RenderShadowThumbnailFramebuffer();
+
+    void CurrentProgramUpdate();
+
+    void CurrentCameraUpdate(Keyboard* keyboard, float delta_time);
+
+    void SceneGui(Mouse* mouse);
+    void SceneDebugGui();
+
+    void TestProgram();
+    void TestProgramUniforms();
+    void TestFrameBuffer(int width, int height);
+    void RenderTestFrameBuffer();
+
+    void TestProgram2();
+    void TestProgramUniforms2();
+    void TestFrameBuffer2(int width, int height);
+    void RenderTestFrameBuffer2();
+
+    void SetupCamera(int width, int height);    
+
     void destroy();
 };
 

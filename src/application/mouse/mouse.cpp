@@ -13,7 +13,7 @@ void Mouse::m_Input(Mouse& mouse, Camera& camera, double x, double y)
     mouse.m_cur_y = static_cast<float>(y);
 
     if (mouse.m_first)
-    {        
+    {
         mouse.m_last_x = mouse.m_cur_x;
         mouse.m_last_y = mouse.m_cur_y;
         mouse.m_first = false;

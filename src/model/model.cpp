@@ -10,12 +10,23 @@ Model::Model()
 
 Model::Model(std::string path, bool flip)
 {
-    m_LoadModel(path);
-
     m_model_mat = glm::mat4(1.0f);
     m_normal_mat = glm::mat3(1.0f);
     m_scale = 1.0f;
     m_flip_tex = flip;
+    
+    m_LoadModel(path);    
+}
+
+Model::Model(Model* model)
+{
+    m_meshes = model->m_meshes;
+    m_textures_loaded = model->m_textures_loaded;
+    m_directory = model->m_directory;
+    m_model_mat = model->m_model_mat;
+    m_normal_mat = model->m_normal_mat;
+    m_scale = model->m_scale;
+    m_flip_tex = model->m_flip_tex;
 }
 
 void Model::m_LoadModel(std::string path)
@@ -40,7 +51,7 @@ void Model::m_Draw(ShaderProgram* shader)
     
     for (int i = 0; i < meshes_len; i += 1)
     {
-        m_meshes[i].m_Draw(shader);
+        m_meshes[i].m_Draw(shader, m_model_mat, m_GetNormalMat());
     }
 }
 

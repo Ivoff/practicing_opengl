@@ -23,6 +23,7 @@
 #include <application/mouse/mouse.hpp>
 #include <application/keyboard/keyboard.hpp>
 #include <application/window/window.hpp>
+#include <framebuffer/framebuffer.hpp>
 
 struct APP {
     bool is_running;
