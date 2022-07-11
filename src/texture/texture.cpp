@@ -1,5 +1,19 @@
 #include <texture/texture.hpp>
 
+Texture::Texture(GLuint target, GLuint format, GLuint type, int width, int height, int depth, void* data)
+{
+    m_target = target;    
+    m_tex_unit = -1;
+    m_format = format;
+    m_width = width;
+    m_height = height;
+    m_depth = depth;
+    m_data = (unsigned char*) data;
+    glGenTextures(1, &m_id);
+    m_Bind();
+    m_DefaultConfig(type);
+}
+
 Texture::Texture(GLuint target, GLuint format, GLuint type, int width, int height, void* data)
 {
     m_target = target;    
@@ -58,12 +72,35 @@ void Texture::m_GenTex(bool auto_mipmap, GLuint type = GL_UNSIGNED_BYTE)
         glTexImage2D(m_target, 0, m_format, m_width, m_height, 0, m_format, type, m_data);
         if (m_format != GL_DEPTH_COMPONENT)
             glGenerateMipmap(m_target);
-    }    
+    }
+    else if (m_target == GL_TEXTURE_CUBE_MAP && m_format == GL_R32F)
+    {
+        for (int i = 0; i < 6; i += 1)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, m_format, m_width, m_height, 0, GL_RED, type, m_data);
+        }
+    }
+    else if (m_target == GL_TEXTURE_CUBE_MAP && m_format == GL_DEPTH_COMPONENT)
+    {
+        for (int i = 0; i < 6; i += 1)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, m_format, m_width, m_height, 0, m_format, type, m_data);
+        }
+    }
+    else if (m_target == GL_TEXTURE_3D)
+    {
+        glTexImage3D(m_target, 0, m_format, m_width, m_height, m_depth, 0, m_format, type, m_data);
+    }
 }
 
 void Texture::m_Bind()
 {    
     glBindTexture(m_target, m_id);
+}
+
+void Texture::m_Unbind()
+{    
+    glBindTexture(m_target, 0);
 }
 
 void Texture::m_SetWrapping(GLuint axis, GLuint wrapping)
@@ -98,14 +135,25 @@ void Texture::m_DefaultConfig(GLuint type = GL_UNSIGNED_BYTE)
     {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
     }
-    else
+
+    m_SetFiltering(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    m_SetFiltering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    if (m_target == GL_TEXTURE_2D)
     {
-        m_SetFiltering(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        m_SetFiltering(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        m_SetWrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
+        m_SetWrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);
     }
-    m_SetWrapping(GL_TEXTURE_WRAP_S, GL_REPEAT);
-    m_SetWrapping(GL_TEXTURE_WRAP_T, GL_REPEAT);
+    else if (m_target == GL_TEXTURE_CUBE_MAP)
+    {
+        m_SetWrapping(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        m_SetWrapping(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        m_SetWrapping(GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    }
 }
 
 void Texture::m_SetBorderColor(glm::vec3 color)

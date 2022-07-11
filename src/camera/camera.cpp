@@ -32,7 +32,7 @@ Camera::Camera(float fov, float near, float far, int width, int height):
 
     m_yaw = 90.0f; // para garantir que a camera comece apontada na direção do z negativo
     m_pitch = 0.0f;
-    m_speed = 3.5f;
+    m_speed = 0.5f;
 }
 
 void Camera::m_UpdateProjMat(float fov, float near, float far, int width, int height)

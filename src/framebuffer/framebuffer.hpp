@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <texture/texture.hpp>
+#include <utils/utils.cpp>
 
 struct FrameBuffer
 {

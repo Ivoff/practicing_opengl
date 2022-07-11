@@ -24,6 +24,8 @@ struct Model
     glm::mat3 m_normal_mat;
     float m_scale;
     bool m_flip_tex;
+    bool m_dont_render{false};
+    bool m_voxel_render{false};
     ShaderProgram* m_shader{nullptr};
 
     Model();

@@ -17,7 +17,7 @@ struct PointLight : Light
         float constant, 
         float linear, 
         float quadratic
-    );    
+    );
 };
 
 #endif

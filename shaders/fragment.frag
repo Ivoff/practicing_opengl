@@ -39,7 +39,9 @@ struct DataLight
 
 void directional_light_func(in DataLight data, out vec3 result);
 void point_light_func(in DataLight data, out vec3 result);
-float shadow_func(in vec4 light_frag_pos);
+float directional_shadow_func(in vec4 light_frag_pos);
+float omnidirectional_shadow_func(in vec3 frag_pos, in vec3 point_light_pos);
+float VectorToDepthValue(vec3 Vec);
 
 in vec3 frag_pos;
 in vec3 normal;
@@ -57,6 +59,11 @@ uniform DirectionalLight dir_light;
 
 uniform int directional_active;
 
+uniform float far_plane;
+uniform float near_plane;
+uniform int omnidirectional_shadow_enable;
+uniform float omnidirectional_shadow_bias;
+
 uniform float shadow_map_bias;
 uniform int shadow_enable;
 
@@ -66,7 +73,8 @@ uniform sampler2D texture_specular_0;
 uniform sampler2D texture_specular_1;
 uniform sampler2D texture_normal_0;
 uniform sampler2D texture_normal_1;
-uniform sampler2D shadow_map;
+uniform sampler2D directional_shadow_map;
+uniform samplerCube omnidirectional_shadow_map;
 
 void main() 
 {
@@ -110,7 +118,7 @@ void directional_light_func(in DataLight data, out vec3 result)
     float shadow = 1.0f;
     if (shadow_enable == 1)
     {
-        shadow = shadow_func(light_frag_pos);
+        shadow = directional_shadow_func(light_frag_pos);
     }        
 
     result = ambient + shadow * (diffuse + specular);
@@ -133,7 +141,7 @@ void point_light_func(in DataLight data, out vec3 result)
     result = (ambient * attenuation) + (diffuse * attenuation) + (specular * attenuation);
 }
 
-float shadow_func(in vec4 light_frag_pos)
+float directional_shadow_func(in vec4 light_frag_pos)
 {
     light_frag_pos = light_frag_pos / light_frag_pos.w;
     light_frag_pos = light_frag_pos * 0.5f + 0.5f;
@@ -143,7 +151,7 @@ float shadow_func(in vec4 light_frag_pos)
         light_frag_pos.z = 1.0f;
     }
 
-    float depth = texture(shadow_map, light_frag_pos.xy).r;
+    float depth = texture(directional_shadow_map, light_frag_pos.xy).r;
 
     if ((depth + shadow_map_bias) < light_frag_pos.z)
     {
@@ -153,4 +161,32 @@ float shadow_func(in vec4 light_frag_pos)
     {
         return 1.0f;
     }    
+}
+
+float omnidirectional_shadow_func(in vec3 frag_pos, in vec3 point_light_pos)
+{
+    vec3 light_direction = frag_pos.xyz - point_light_pos;
+    float cur_distance = VectorToDepthValue(light_direction);
+
+    float closest_distance = texture(omnidirectional_shadow_map, light_direction).r;
+
+    if ((closest_distance + omnidirectional_shadow_bias) < cur_distance)
+    {
+        return 0.0f;
+    }
+    else 
+    {
+        return 1.0f;
+    }
+}
+
+float VectorToDepthValue(vec3 Vec)
+{
+    vec3 AbsVec = abs(Vec);
+    float LocalZcomp = max(AbsVec.x, max(AbsVec.y, AbsVec.z));
+
+    const float f = far_plane;
+    const float n = near_plane;
+    float NormZComp = (f+n) / (f-n) - (2*f*n)/(f-n)/LocalZcomp;
+    return (NormZComp + 1.0) * 0.5;
 }

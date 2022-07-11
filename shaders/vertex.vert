@@ -30,7 +30,7 @@ void main()
         normalize((model_mat * vec4(p_bitangent, 0.0f)).xyz),
         normalize((model_mat * vec4(normal, 0.0f)).xyz)
     );
-        
+    
     frag_pos = (model_mat * vec4(vert_data, 1.0f)).xyz;
     light_frag_pos = (light_proj_mat * light_view_mat * vec4(frag_pos, 1.0f));
     tex_coord = p_tex_coord;

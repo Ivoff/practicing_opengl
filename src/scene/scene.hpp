@@ -15,6 +15,7 @@
 #include <application/keyboard/keyboard.hpp>
 #include <application/imgui_wrapper/imgui_wrapper.hpp>
 #include <application/mouse/mouse.hpp>
+#include <voxel_map/voxel_map.hpp>
 #include <stdlib.h>
 #include <time.h>
 
@@ -28,6 +29,7 @@ struct Scene
     std::unordered_map<std::string, Model*> models;
     std::unordered_map<std::string, FrameBuffer*> framebuffers;
     std::unordered_map<std::string, Texture*> textures;
+    VoxelMap* voxelmap;
 
     float scale;
     bool directional_active;
@@ -35,11 +37,10 @@ struct Scene
     int current_camera_index{0};    
     float shadow_map_bias;
     bool shadow_enable{false};
-    // glm::mat4 light_view_mat;
-    // glm::mat4 light_proj_mat;
-
-    bool dir_light_lock_ambient{false};
-    float ambient_light_increment;
+    bool omnidirectional_shadow_enable{false};
+    float omnidirectional_shadow_bias;
+    int test_type{0};
+    bool voxelmap_once = false;
 
     Camera* GetCurrentCamera();
     
@@ -77,19 +78,17 @@ struct Scene
     void CurrentCameraUpdate(Keyboard* keyboard, float delta_time);
 
     void SceneGui(Mouse* mouse);
-    void SceneDebugGui();
 
-    void TestProgram();
-    void TestProgramUniforms();
-    void TestFrameBuffer(int width, int height);
-    void RenderTestFrameBuffer();
+    void SetupCamera(int width, int height); 
 
-    void TestProgram2();
-    void TestProgramUniforms2();
-    void TestFrameBuffer2(int width, int height);
-    void RenderTestFrameBuffer2();
-
-    void SetupCamera(int width, int height);    
+    void CubemapProgramSetup();
+    void CubemapProgramUniforms();
+    void CubemapProgramRender(int window_width, int window_height);
+    
+    void VoxelMapSetup();
+    void VoxelMapUpdate();
+    void VoxelMapRender();
+    void VoxelMapGui();
 
     void destroy();
 };

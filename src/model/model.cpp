@@ -233,7 +233,7 @@ std::vector<Texture> Model::m_LoadMaterialTexture(aiMaterial* material, aiTextur
         }
         
         std::string texture_path = m_directory + sub_path;
-        printf("Trying to load:\n\tTexture(%s)\n", texture_path.c_str());
+        // printf("Trying to load:\n\tTexture(%s)\n", texture_path.c_str());
 
         bool skip = false;
         int loaded_len = m_textures_loaded.size();

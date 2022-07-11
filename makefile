@@ -17,7 +17,8 @@ OBJS = 	src/*.cpp \
 		src/light/point/light_point.cpp \
 		src/mesh/mesh.cpp \
 		src/model/model.cpp \
-		src/framebuffer/framebuffer.cpp
+		src/framebuffer/framebuffer.cpp \
+		src/voxel_map/voxel_map.cpp
 
 LIBS_DIR = -Llib
 INCLUDE_DIR = -Iinclude -Isrc -Iinclude/imgui

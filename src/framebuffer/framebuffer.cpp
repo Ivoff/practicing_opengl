@@ -4,7 +4,7 @@ FrameBuffer::FrameBuffer(int width, int height) :
     m_width {width},
     m_height {height} 
 {
-    glGenFramebuffers(1, &m_id);    
+    glGenFramebuffers(1, &m_id);
 }
 
 void FrameBuffer::m_Bind()
@@ -19,16 +19,31 @@ void FrameBuffer::m_Unbind()
 
 void FrameBuffer::m_AttachColor(Texture texture, std::string name)
 {
-    int attach_count = GL_COLOR_ATTACHMENT0 + m_color_tex.size();
+    int attach_count = GL_COLOR_ATTACHMENT0;
     m_color_attach[name] = attach_count;
     m_color_tex.emplace_back(texture);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, attach_count, GL_TEXTURE_2D, texture.m_id, 0);
+    
+    if (texture.m_target == GL_TEXTURE_2D)
+    {
+        GL_STMT(glFramebufferTexture2D(GL_FRAMEBUFFER, attach_count, GL_TEXTURE_2D, texture.m_id, 0));
+    }
+    else if (texture.m_target == GL_TEXTURE_CUBE_MAP)
+    {
+        GL_STMT(glFramebufferTexture(GL_FRAMEBUFFER, attach_count, texture.m_id, 0));
+    }
 }
 
 void FrameBuffer::m_AttachDepth(Texture texture)
 {
     m_depth_attach = texture.m_id;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture.m_id, 0);
+    if (texture.m_target == GL_TEXTURE_2D)
+    {
+        GL_STMT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture.m_target, texture.m_id, 0));
+    }
+    else if (texture.m_target == GL_TEXTURE_CUBE_MAP)
+    {
+        GL_STMT(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture.m_id, 0));
+    }
 }
 
 void FrameBuffer::m_AttachStencil(Texture texture)

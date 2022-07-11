@@ -12,31 +12,31 @@ Mesh::Mesh(std::vector<Vertex> vertexes, std::vector<unsigned int> indices, std:
 
 void Mesh::m_Initialization()
 {
-    m_PrintMaterials();
-    glGenVertexArrays(1, &m_vao);
-    glGenBuffers(1, &m_vbo);
-    glGenBuffers(1, &m_ebo);
+    // m_PrintMaterials();
+    GL_STMT(glGenVertexArrays(1, &m_vao));
+    GL_STMT(glGenBuffers(1, &m_vbo));
+    GL_STMT(glGenBuffers(1, &m_ebo));
 
-    glBindVertexArray(m_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+    GL_STMT(glBindVertexArray(m_vao));
+    GL_STMT(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+    GL_STMT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo));
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*m_vertexes.size(), &m_vertexes[0], GL_DYNAMIC_DRAW);    
+    GL_STMT(glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*m_vertexes.size(), &m_vertexes[0], GL_DYNAMIC_DRAW));
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_position));
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
-    glEnableVertexAttribArray(1);    
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tex_coord));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent));
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_bitangent));
-    glEnableVertexAttribArray(4);
+    GL_STMT(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_position)));
+    GL_STMT(glEnableVertexAttribArray(0));
+    GL_STMT(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal)));
+    GL_STMT(glEnableVertexAttribArray(1));
+    GL_STMT(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tex_coord)));
+    GL_STMT(glEnableVertexAttribArray(2));
+    GL_STMT(glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent)));
+    GL_STMT(glEnableVertexAttribArray(3));
+    GL_STMT(glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_bitangent)));
+    GL_STMT(glEnableVertexAttribArray(4));
     
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*m_indices.size(), &m_indices[0], GL_STATIC_DRAW);
+    GL_STMT(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*m_indices.size(), &m_indices[0], GL_STATIC_DRAW));
 
-    glBindVertexArray(0);
+    GL_STMT(glBindVertexArray(0));
 }
 
 void Mesh::m_Draw(ShaderProgram* shader, glm::mat4 model_mat, glm::mat3 normal_mat)
@@ -85,7 +85,7 @@ void Mesh::m_Draw(ShaderProgram* shader, glm::mat4 model_mat, glm::mat3 normal_m
     shader->m_setUniform("normal_mat", normal_mat);
     
     glBindVertexArray(m_vao);
-    glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);    
+    glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0); 
     glBindVertexArray(0);
 }
 

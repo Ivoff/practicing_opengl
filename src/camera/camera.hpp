@@ -24,7 +24,7 @@ struct Camera
     glm::vec3 m_up;
     glm::mat4x4 m_view_mat;
     glm::mat4x4 m_proj_mat;
-    glm::mat4x4 m_ortho_mat;    
+    glm::mat4x4 m_ortho_mat;
     
     Camera(float fov, float near, float far, int width, int height);
     void m_SetOrtho(float size);

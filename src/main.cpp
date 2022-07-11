@@ -12,6 +12,6 @@ int main()
 
         glfwSwapBuffers(app.m_window->m_glfw_window);        
     }    
-
+    std::exit(0);
     return 0;
 }

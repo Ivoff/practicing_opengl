@@ -9,6 +9,7 @@
 #include <texture/texture.hpp>
 #include <shader/shader.hpp>
 #include <material/material.hpp>
+#include <utils/utils.cpp>
 
 struct Vertex
 {

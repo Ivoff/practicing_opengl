@@ -10,6 +10,7 @@
 #include <env.hpp>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
+#include <utils/utils.cpp>
 
 struct Shader{    
     static GLuint m_create(std::string file_path, GLint shader_type){
@@ -36,10 +37,13 @@ struct Shader{
         glCompileShader(s_id);
 
         int compile_ok{};
-        char log[4096]{};
+        char* log = NULL;
+        int log_len = 0;
         glGetShaderiv(s_id, GL_COMPILE_STATUS, &compile_ok);
         if(!compile_ok){
-            glGetShaderInfoLog(s_id, 512, NULL, log);
+            glGetShaderiv(s_id, GL_INFO_LOG_LENGTH, (int*)&log_len);
+            log = (char*) malloc(sizeof(char)*log_len);
+            glGetShaderInfoLog(s_id, log_len, NULL, log);
             std::cerr << "Error Shader [" << s_id << "]: " << log << std::endl;
             delete[] file_content;
             exit(EXIT_FAILURE);

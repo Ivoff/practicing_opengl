@@ -106,15 +106,15 @@ void Application::m_setup()
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glDepthRange(0.0, 1.0);
 
     m_scene.SetupCamera(m_window->m_width, m_window->m_height);
-    m_scene.SetupPointLight(); 
+    m_scene.SetupPointLight();
     m_scene.SetupDirLight();
 
     m_scene.directional_active = true;
     m_scene.map_type = 1;
-    m_scene.shadow_map_bias = 0.05f;
+    m_scene.shadow_map_bias = 0.005f;
+    m_scene.omnidirectional_shadow_bias = 0.005f;
 
     m_scene.LoadModels();
 
@@ -124,20 +124,14 @@ void Application::m_setup()
         
     m_scene.SetupLightlessProgram();
     m_scene.LightlessProgramUniforms();
-        
-    m_scene.SetupLampProgram();
-    m_scene.LampProgramUniforms();
                 
     m_scene.ShadowFramebufferSetup();
     m_scene.DirLightCameraSetup();
-    m_scene.SetupShadowProgram();    
+    m_scene.SetupShadowProgram();
     m_scene.ShadowProgramUniforms();
     m_scene.ShadowThumbnailSetup();
-    
-    m_scene.TestProgram();
-    m_scene.TestFrameBuffer(512, 512);
-    m_scene.TestProgram2();
-    m_scene.TestFrameBuffer2(512, 512);
+
+    m_scene.VoxelMapSetup();
 }
 
 void Application::m_update(float delta_time)
@@ -150,11 +144,11 @@ void Application::m_update(float delta_time)
 
     m_scene.IlluminationProgramUniforms();
 
-    m_scene.LampUpdate();
-
     m_scene.LightlessProgramUniforms();
 
     m_scene.ShadowProgramUniforms();
+
+    m_scene.VoxelMapUpdate();
 
     m_scene.UpdateModels();
 }
@@ -164,21 +158,31 @@ void Application::m_render()
     m_imgui->m_NewFrame();
 
     m_scene.SceneGui(m_mouse);
-    m_scene.SceneDebugGui();
+
+    m_scene.VoxelMapGui();
 
     m_scene.RenderShadowFramebuffer();
 
-    m_scene.RenderShadowThumbnailFramebuffer();
+    // m_scene.RenderShadowThumbnailFramebuffer();
 
+    m_scene.VoxelMapRender();
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     glViewport(0, 0, m_window->m_width, m_window->m_height);
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+    m_scene.models["sponza"]->m_Draw(m_scene.programs["current_program"]);
     for (auto i = m_scene.models.begin(); i != m_scene.models.end(); i++)
     {
-        if (i->second->m_shader == nullptr)
-            i->second->m_Draw(m_scene.programs["current_program"]);
-        else
-            i->second->m_Draw(i->second->m_shader);
+        if (i->second->m_dont_render == false)
+        {
+            if (i->second->m_shader == nullptr)
+                i->second->m_Draw(m_scene.programs["current_program"]);
+            else
+                i->second->m_Draw(i->second->m_shader);
+        }
     }
 
     m_imgui->m_Render();
