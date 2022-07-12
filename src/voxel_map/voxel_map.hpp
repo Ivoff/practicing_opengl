@@ -19,12 +19,14 @@
 
 struct VoxelMap
 {
-    GLsizei m_size;
+    glm::ivec3 m_voxelmap_dimensions;
     ShaderProgram* m_voxelmap_program;
     FrameBuffer* m_voxelmap_framebuffer;
     Camera* m_directional_light_camera;
     GLuint m_texture_id;
     GLubyte* m_texture_data;
+    bool m_voxelmap_generate{false};
+    int m_voxelmap_mipmap_levels{7};
 
     Camera* m_camera;
     FrameBuffer* m_camera_framebuffer;

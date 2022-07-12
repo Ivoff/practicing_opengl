@@ -7,7 +7,8 @@ Application::Application(int width, int height, const char* title, int frame_tar
         frame_target, // frame_target
         0.0, // last_frame_time
         NULL, // min_fps_time
-        0 // fps
+        0, // fps
+        0, // curr_frame
     }
 {
     if(!glfwInit()) {
@@ -107,6 +108,8 @@ void Application::m_setup()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
+    m_scene.curr_frame = m_info.curr_frame;
+
     m_scene.SetupCamera(m_window->m_width, m_window->m_height);
     m_scene.SetupPointLight();
     m_scene.SetupDirLight();
@@ -163,7 +166,7 @@ void Application::m_render()
 
     m_scene.RenderShadowFramebuffer();
 
-    // m_scene.RenderShadowThumbnailFramebuffer();
+    m_scene.RenderShadowThumbnailFramebuffer();
 
     m_scene.VoxelMapRender();
 
@@ -186,6 +189,15 @@ void Application::m_render()
     }
 
     m_imgui->m_Render();
+
+    if (m_info.curr_frame == 2)
+    {
+        m_scene.current_camera_index = 1;
+    }
+    else if (m_info.curr_frame == 3)
+    {
+        m_scene.current_camera_index = 0;
+    }
 }
 
 void Application::m_KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

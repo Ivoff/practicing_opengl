@@ -32,6 +32,7 @@ struct APP {
     unsigned int last_frame_time;
     unsigned int min_fps_time;
     unsigned int fps;
+    unsigned int curr_frame;
 };
 
 class Application 

@@ -40,7 +40,7 @@ struct Scene
     bool omnidirectional_shadow_enable{false};
     float omnidirectional_shadow_bias;
     int test_type{0};
-    bool voxelmap_once = false;
+    int curr_frame{0};
 
     Camera* GetCurrentCamera();
     

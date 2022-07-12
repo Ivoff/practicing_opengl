@@ -2,7 +2,10 @@
 
 VoxelMap::VoxelMap(int size)
 {
-    m_size = size;
+    m_voxelmap_dimensions.x = size;
+    m_voxelmap_dimensions.y = size;
+    m_voxelmap_dimensions.z = size;
+
     GL_STMT(glGenTextures(1, &m_texture_id));
     GL_STMT(glBindTexture(GL_TEXTURE_3D, m_texture_id));
     
@@ -17,7 +20,7 @@ VoxelMap::VoxelMap(int size)
     // glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 0);    
     
     // GL_STMT(glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, m_size, m_size, m_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_texture_data));
-    GL_STMT(glTexStorage3D(GL_TEXTURE_3D, 7, GL_RGBA8, m_size, m_size, m_size));
+    GL_STMT(glTexStorage3D(GL_TEXTURE_3D, m_voxelmap_mipmap_levels  , GL_RGBA8, m_voxelmap_dimensions.x, m_voxelmap_dimensions.y, m_voxelmap_dimensions.z));
     GL_STMT(glBindImageTexture(0, m_texture_id, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8));
 
     // glGenerateMipmap(GL_TEXTURE_3D);
@@ -33,14 +36,26 @@ void VoxelMap::m_Clear()
     glBindTexture(GL_TEXTURE_3D, m_texture_id);
     
     int offset = 0;
-    int size = m_size * m_size * m_size * 4;
+    int size = m_voxelmap_dimensions.x * m_voxelmap_dimensions.y * m_voxelmap_dimensions.z * 4;
     
     for(int i = 0; i < size; i += 1)
     {
         m_texture_data[i] = 0;
     }
 
-    GL_STMT(glTexSubImage3D(GL_TEXTURE_3D, 0, offset, offset, offset, m_size, m_size, m_size, GL_RGBA, GL_UNSIGNED_BYTE, m_texture_data));
+    GL_STMT(glTexSubImage3D(
+        GL_TEXTURE_3D, 
+        0, 
+        offset, 
+        offset, 
+        offset, 
+        m_voxelmap_dimensions.x, 
+        m_voxelmap_dimensions.y, 
+        m_voxelmap_dimensions.z, 
+        GL_RGBA, 
+        GL_UNSIGNED_BYTE, 
+        m_texture_data
+    ));
     
     glBindTexture(GL_TEXTURE_3D, 0);
 }
@@ -81,9 +96,9 @@ void VoxelMap::m_Uniforms(
 
 void VoxelMap::m_VoxelmapSetup()
 {
-    m_voxelmap_framebuffer = new FrameBuffer(m_size, m_size);
-    Texture color_tex = Texture(GL_TEXTURE_2D, GL_RGBA, GL_UNSIGNED_BYTE, m_size, m_size, NULL);
-    Texture depth_tex = Texture(GL_TEXTURE_2D, GL_DEPTH_COMPONENT, GL_FLOAT, m_size, m_size, NULL);
+    m_voxelmap_framebuffer = new FrameBuffer(m_voxelmap_dimensions.x, m_voxelmap_dimensions.y);
+    Texture color_tex = Texture(GL_TEXTURE_2D, GL_RGBA, GL_UNSIGNED_BYTE, m_voxelmap_dimensions.x, m_voxelmap_dimensions.y, NULL);
+    Texture depth_tex = Texture(GL_TEXTURE_2D, GL_DEPTH_COMPONENT, GL_FLOAT, m_voxelmap_dimensions.x, m_voxelmap_dimensions.y, NULL);
     m_voxelmap_framebuffer->m_Bind();
     m_voxelmap_framebuffer->m_AttachColor(color_tex, "color_attach");
     m_voxelmap_framebuffer->m_AttachDepth(depth_tex);
@@ -95,7 +110,7 @@ void VoxelMap::m_Generate(std::unordered_map<std::string, Model*>& models)
 {
     m_voxelmap_framebuffer->m_Bind();
     
-    GL_STMT(glViewport(0, 0, m_size, m_size));
+    GL_STMT(glViewport(0, 0, m_voxelmap_dimensions.x, m_voxelmap_dimensions.y));
     GL_STMT(glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE));
     GL_STMT(glDisable(GL_CULL_FACE));
     GL_STMT(glDisable(GL_DEPTH_TEST));
@@ -129,7 +144,7 @@ void VoxelMap::m_Generate(std::unordered_map<std::string, Model*>& models)
 
 void VoxelMap::m_CameraSetup()
 {
-    m_camera = new Camera(90.0f, 0.1f, 30.0f, 300, 300);
+    m_camera = new Camera(90.0f, 0.1f, 45.0f, 300, 300);
     m_camera->m_SetOrtho(37.0f);
     m_camera->m_position = glm::vec3(-1.0f, 18.0f, -25.0f);
     
@@ -242,5 +257,12 @@ void VoxelMap::m_Gui()
                 ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
             );
         }
+        if (ImGui::CollapsingHeader("Voxel Map"))
+        {
+            ImGui::InputInt3("Dimensions", &m_voxelmap_dimensions[0]);
+            ImGui::InputInt("Mipmap Levels", &m_voxelmap_mipmap_levels, 1, 1);
+            m_voxelmap_generate = ImGui::Button("Generate");
+        }
+
     ImGui::End();
 }

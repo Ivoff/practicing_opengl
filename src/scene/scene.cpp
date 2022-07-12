@@ -92,7 +92,7 @@ void Scene::SetupDirLight()
         glm::vec3(0.60f, 0.60f, 0.60f),
         glm::vec3(0.85f, 0.85f, 0.85f) 
     );
-    dir_lights["dir_light"]->m_position = glm::vec3(0.0f, 40.0f, -0.1f);
+    dir_lights["dir_light"]->m_position = glm::vec3(0.0f, 40.0f, -12.5f);
     dir_lights["dir_light"]->m_direction = dir_lights["dir_light"]->m_position - 2.0f * dir_lights["dir_light"]->m_position;
     
 }
@@ -115,7 +115,8 @@ void Scene::CameraDirLightUpdate()
 {
     cameras["light_camera"]->m_position = dir_lights["dir_light"]->m_position;
     cameras["light_camera"]->m_view_mat = glm::translate(cameras["light_camera"]->m_view_mat, cameras["light_camera"]->m_position);
-    cameras["light_camera"]->m_SetFrontDir(cameras["light_camera"]->m_yaw, cameras["light_camera"]->m_pitch);
+    cameras["light_camera"]->m_front = glm::normalize(cameras["light_camera"]->m_position - 2.0f * cameras["light_camera"]->m_position);
+    // cameras["light_camera"]->m_SetFrontDir(cameras["light_camera"]->m_yaw, cameras["light_camera"]->m_pitch);
     cameras["light_camera"]->m_UpdateEulerAngles();
     cameras["light_camera"]->m_LookAt(cameras["light_camera"]->m_front);
 }
@@ -341,12 +342,25 @@ void Scene::SceneGui(Mouse* mouse)
         if (ImGui::TreeNode("Direct lights"))
         {
             ImGui::Checkbox("Enable?", &directional_active);
-            ImGui::DragFloat3("Position", &dir_lights["dir_light"] ->m_position[0], 0.25f, -999.0f, 999.0f, "%.3f");
+            ImGui::DragFloat3("Position", &dir_lights["dir_light"]->m_position[0], 0.25f, -999.0f, 999.0f, "%.3f");
             ImGui::DragFloat3("Ambient", &dir_lights["dir_light"]->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
             ImGui::DragFloat3("Diffuse", &dir_lights["dir_light"]->m_diffuse[0], 0.05f, 0.0f, 5.0f, "%.2f");
             ImGui::DragFloat3("Specular", &dir_lights["dir_light"]->m_specular[0], 0.05f, 0.0f, 5.0f, "%.2f");
 
             ImGui::TreePop();
+
+            if (dir_lights["dir_light"]->m_position.x < 0.1f && dir_lights["dir_light"]->m_position.x > -0.1f)
+            {
+                dir_lights["dir_light"]->m_position.x = 0.05f;
+            }
+            if (dir_lights["dir_light"]->m_position.y < 0.1f && dir_lights["dir_light"]->m_position.y > -0.1f)
+            {
+                dir_lights["dir_light"]->m_position.y = 0.05f;
+            }
+            if (dir_lights["dir_light"]->m_position.z < 0.1f && dir_lights["dir_light"]->m_position.z > -0.1f)
+            {
+                dir_lights["dir_light"]->m_position.z = 0.05f;
+            }
         }
         if (ImGui::TreeNode("Point Lights"))
         {
@@ -478,9 +492,10 @@ void Scene::VoxelMapGui()
 void Scene::VoxelMapRender()
 {
     voxelmap->m_CameraRender(models);
-    if (voxelmap_once == false)
+
+    if (voxelmap->m_voxelmap_generate == true || curr_frame == 4)
     {
         voxelmap->m_Generate(models);
-        voxelmap_once = true;
+        voxelmap->m_voxelmap_generate = false;
     }
 }
