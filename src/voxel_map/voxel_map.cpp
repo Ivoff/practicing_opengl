@@ -20,14 +20,27 @@ VoxelMap::VoxelMap(int size)
     // glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 0);    
     
     // GL_STMT(glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, m_size, m_size, m_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_texture_data));
-    GL_STMT(glTexStorage3D(GL_TEXTURE_3D, m_voxelmap_mipmap_levels  , GL_RGBA8, m_voxelmap_dimensions.x, m_voxelmap_dimensions.y, m_voxelmap_dimensions.z));
+    GL_STMT(glTexStorage3D(
+        GL_TEXTURE_3D, 
+        m_voxelmap_mipmap_levels, 
+        GL_RGBA8, 
+        m_voxelmap_dimensions.x, 
+        m_voxelmap_dimensions.y, 
+        m_voxelmap_dimensions.z
+    ));
     GL_STMT(glBindImageTexture(0, m_texture_id, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8));
 
-    // glGenerateMipmap(GL_TEXTURE_3D);
+    m_texture_data = (GLubyte*) calloc(size * size * size * 4, sizeof(GLubyte));
 
-    // glActiveTexture(GL_TEXTURE14);
-    // glBindTexture(GL_TEXTURE_3D, m_texture_id);
+    glActiveTexture(GL_TEXTURE14);
+    glBindTexture(GL_TEXTURE_3D, m_texture_id);
 
+    m_ShaderSetup();
+    m_VoxelmapSetup();
+    m_CameraSetup();
+    m_CameraFramebufferSetup();
+    m_CameraShaderSetup();
+    
     // m_Clear();
 }
 
@@ -81,8 +94,8 @@ void VoxelMap::m_Uniforms(
     // m_voxelmap_program->m_setUniform("view_mat", cameras["perspective_cam"]->m_view_mat);
     // m_voxelmap_program->m_setUniform("proj_mat", cameras["perspective_cam"]->m_proj_mat);
 
-    m_voxelmap_program->m_setUniform("light_view_mat", m_directional_light_camera->m_view_mat);
-    m_voxelmap_program->m_setUniform("light_proj_mat", m_directional_light_camera->m_ortho_mat);
+    m_voxelmap_program->m_setUniform("light_view_mat", cameras["light_camera"]->m_view_mat);
+    m_voxelmap_program->m_setUniform("light_proj_mat", cameras["light_camera"]->m_ortho_mat);
 
     m_voxelmap_program->m_setUniform("dir_light.direction", dir_lights["dir_light"]->m_direction);
     m_voxelmap_program->m_setUniform("dir_light.ambient", dir_lights["dir_light"]->m_ambient);
@@ -92,6 +105,7 @@ void VoxelMap::m_Uniforms(
     m_voxelmap_program->m_setUniform("directional_shadow_map", 13);
     m_voxelmap_program->m_setUniform("voxel_map", 0);
     m_voxelmap_program->m_setUniform("shadow_map_bias", 0.005f);
+    m_voxelmap_program->m_setUniform("shadow_active", shadow_active);
 }
 
 void VoxelMap::m_VoxelmapSetup()
@@ -109,7 +123,7 @@ void VoxelMap::m_VoxelmapSetup()
 void VoxelMap::m_Generate(std::unordered_map<std::string, Model*>& models)
 {
     m_voxelmap_framebuffer->m_Bind();
-    
+
     GL_STMT(glViewport(0, 0, m_voxelmap_dimensions.x, m_voxelmap_dimensions.y));
     GL_STMT(glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE));
     GL_STMT(glDisable(GL_CULL_FACE));
@@ -118,6 +132,7 @@ void VoxelMap::m_Generate(std::unordered_map<std::string, Model*>& models)
     GL_STMT(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
     GL_STMT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     
+    GL_STMT(glBindImageTexture(0, m_texture_id, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8));
     models["sponza"]->m_Draw(m_voxelmap_program);
     
     GL_STMT(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
@@ -126,20 +141,28 @@ void VoxelMap::m_Generate(std::unordered_map<std::string, Model*>& models)
 
     GL_STMT(glBindTexture(GL_TEXTURE_3D, m_texture_id));
 
+    // m_Clear();
+
     GLint width = 0;
     GLint height = 0;
     GLint depth = 0;
     GL_STMT(glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &width));
     GL_STMT(glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_HEIGHT, &height));
     GL_STMT(glGetTexLevelParameteriv(GL_TEXTURE_3D, 0, GL_TEXTURE_DEPTH, &depth));
-
-    m_texture_data = (GLubyte*) calloc(width * height * depth * 4, sizeof(GLubyte));
     
+    free(m_texture_data);
+    m_texture_data = (GLubyte*) calloc(width * height * depth * 4, sizeof(GLubyte));
+        
     GL_STMT(glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT));
     GL_STMT(glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_texture_data));
     glGenerateMipmap(GL_TEXTURE_3D);
 
     m_voxelmap_framebuffer->m_Unbind();
+}
+
+void VoxelMap::m_VoxelmapSetRead()
+{
+    GL_STMT(glBindImageTexture(0, m_texture_id, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8));
 }
 
 void VoxelMap::m_CameraSetup()
@@ -261,7 +284,35 @@ void VoxelMap::m_Gui()
         {
             ImGui::InputInt3("Dimensions", &m_voxelmap_dimensions[0]);
             ImGui::InputInt("Mipmap Levels", &m_voxelmap_mipmap_levels, 1, 1);
+            ImGui::Checkbox("Shadow Map?", &shadow_active);
             m_voxelmap_generate = ImGui::Button("Generate");
+        }
+        if (ImGui::CollapsingHeader("Cone Tracing"))
+        {
+            ImGui::InputFloat("Initial Offset", &voxel_initial_offset, 0.1f, 0.5f, "%.2f");
+            if (voxel_initial_offset < 0.0001f)
+            {
+                voxel_initial_offset = 0.01f;
+            }
+            const char* items_cam[] = {"6", "9", "5", "1"};
+            ImGui::Combo("Directions", &directions_index, items_cam, 4);
+            ImGui::InputFloat("Voxel Size", &voxel_size, 0.5f, 0.5f, "%.2f");
+            if (voxel_size < 1)
+            {
+                voxel_size = 1;
+            }
+            ImGui::Checkbox("Wheights?", &weight_active);
+        }
+
+        ImGui::Checkbox("Indirect Light?", &indirect_light_active);
+        if (indirect_light_active)
+        {
+            ImGui::Checkbox("Only Indirect Light", &only_indirect_light_active);
+            if (only_indirect_light_active)
+            {
+                ImGui::Checkbox("Indirect Light High Contrast", &only_indirect_light_high_contrast_active);
+            }
+            ImGui::Checkbox("Dark Places Indirect Light Help", &dark_places_help_active);
         }
 
     ImGui::End();

@@ -179,13 +179,27 @@ void Scene::IlluminationProgramUniforms()
     programs["illumination_program"]->m_setUniform("dir_light.specular", dir_lights["dir_light"]->m_specular);
     programs["illumination_program"]->m_setUniform("directional_active", (int)directional_active);
 
-    programs["illumination_program"]->m_setUniform("point_light.position", point_lights["point_light"]->m_position);
-    programs["illumination_program"]->m_setUniform("point_light.ambient", point_lights["point_light"]->m_ambient);
-    programs["illumination_program"]->m_setUniform("point_light.diffuse", point_lights["point_light"]->m_diffuse);
-    programs["illumination_program"]->m_setUniform("point_light.specular", point_lights["point_light"]->m_specular);
-    programs["illumination_program"]->m_setUniform("point_light.constant", point_lights["point_light"]->m_constant);
-    programs["illumination_program"]->m_setUniform("point_light.linear", point_lights["point_light"]->m_linear);
-    programs["illumination_program"]->m_setUniform("point_light.quadratic", point_lights["point_light"]->m_quadratic);
+    // programs["illumination_program"]->m_setUniform("point_light.position", point_lights["point_light"]->m_position);
+    // programs["illumination_program"]->m_setUniform("point_light.ambient", point_lights["point_light"]->m_ambient);
+    // programs["illumination_program"]->m_setUniform("point_light.diffuse", point_lights["point_light"]->m_diffuse);
+    // programs["illumination_program"]->m_setUniform("point_light.specular", point_lights["point_light"]->m_specular);
+    // programs["illumination_program"]->m_setUniform("point_light.constant", point_lights["point_light"]->m_constant);
+    // programs["illumination_program"]->m_setUniform("point_light.linear", point_lights["point_light"]->m_linear);
+    // programs["illumination_program"]->m_setUniform("point_light.quadratic", point_lights["point_light"]->m_quadratic);
+
+    programs["illumination_program"]->m_setUniform("voxel_view_mat", voxelmap->m_camera->m_view_mat);
+    programs["illumination_program"]->m_setUniform("voxel_proj_mat", voxelmap->m_camera->m_ortho_mat);
+    programs["illumination_program"]->m_setUniform("VOXEL_DIMENSIONS", voxelmap->m_voxelmap_dimensions);
+    programs["illumination_program"]->m_setUniform("VOXEL_SIZE", voxelmap->voxel_size);
+    programs["illumination_program"]->m_setUniform("DIRECTIONS", voxelmap->directions_map[voxelmap->directions_index]);
+    programs["illumination_program"]->m_setUniform("MAX_MIPMAP_LEVEL", voxelmap->m_voxelmap_mipmap_levels);
+    programs["illumination_program"]->m_setUniform("VOXEL_INITIAL_OFFSET", voxelmap->voxel_initial_offset);
+    programs["illumination_program"]->m_setUniform("indirect_light_active", voxelmap->indirect_light_active);
+    programs["illumination_program"]->m_setUniform("weight_active", voxelmap->weight_active);
+    programs["illumination_program"]->m_setUniform("only_indirect_light_active", voxelmap->only_indirect_light_active);
+    programs["illumination_program"]->m_setUniform("only_indirect_light_high_contrast_active", voxelmap->only_indirect_light_high_contrast_active);
+    programs["illumination_program"]->m_setUniform("dark_places_help_active", voxelmap->dark_places_help_active);
+    programs["illumination_program"]->m_setUniform("voxel_map", 14);
 }
 
 void Scene::SetupLightlessProgram()
@@ -279,21 +293,21 @@ void Scene::CurrentProgramUpdate()
     programs["current_program"]->m_setUniform("camera_pos", cameras["current_camera"]->m_position);    
     programs["current_program"]->m_setUniform("directional_active", (int)directional_active);    
 
-    PointLightUpdate();
+    // PointLightUpdate();
 
-    programs["current_program"]->m_setUniform("point_light.ambient", point_lights["point_light"]->m_ambient);
-    programs["current_program"]->m_setUniform("point_light.diffuse", point_lights["point_light"]->m_diffuse);
-    programs["current_program"]->m_setUniform("point_light.specular", point_lights["point_light"]->m_specular);
-    programs["current_program"]->m_setUniform("point_light.constant", point_lights["point_light"]->m_constant);
-    programs["current_program"]->m_setUniform("point_light.linear", point_lights["point_light"]->m_linear);
-    programs["current_program"]->m_setUniform("point_light.quadratic", point_lights["point_light"]->m_quadratic);
+    // programs["current_program"]->m_setUniform("point_light.ambient", point_lights["point_light"]->m_ambient);
+    // programs["current_program"]->m_setUniform("point_light.diffuse", point_lights["point_light"]->m_diffuse);
+    // programs["current_program"]->m_setUniform("point_light.specular", point_lights["point_light"]->m_specular);
+    // programs["current_program"]->m_setUniform("point_light.constant", point_lights["point_light"]->m_constant);
+    // programs["current_program"]->m_setUniform("point_light.linear", point_lights["point_light"]->m_linear);
+    // programs["current_program"]->m_setUniform("point_light.quadratic", point_lights["point_light"]->m_quadratic);
 }
 
 void Scene::CurrentCameraUpdate(Keyboard* keyboard, float delta_time)
 {
     if (current_camera_index != 1)
     {
-        CameraDirLightUpdate();
+        // CameraDirLightUpdate();
     }
 
     cameras["current_camera"] = GetCurrentCamera();
@@ -361,26 +375,18 @@ void Scene::SceneGui(Mouse* mouse)
             {
                 dir_lights["dir_light"]->m_position.z = 0.05f;
             }
-        }
-        if (ImGui::TreeNode("Point Lights"))
-        {
-            ImGui::DragFloat3("Position", &point_lights["point_light"]->m_position[0], 0.25f, -999.0f, 999.0f, "%.3f");
-            ImGui::DragFloat3("Ambient", &point_lights["point_light"]->m_ambient[0], 0.05f, 0.0f, 1.0f, "%.2f");
-            ImGui::DragFloat3("Diffuse", &point_lights["point_light"]->m_diffuse[0], 0.05f, 0.0f, 5.0f, "%.2f");
-            ImGui::DragFloat3("Specular", &point_lights["point_light"]->m_specular[0], 0.05f, 0.0f, 5.0f, "%.2f");
-            ImGui::DragFloat("Constant Attenuation", &point_lights["point_light"]->m_constant, 0.0001f, 0.0001f, 5.0f, "%.4f");
-            ImGui::DragFloat("Linear Attenuation", &point_lights["point_light"]->m_linear, 0.0001f, 0.0001f, 5.0f, "%.4f");
-            ImGui::DragFloat("Quadratic Attenuation", &point_lights["point_light"]->m_quadratic, 0.0001f, 0.0001f, 5.0f, "%.4f");
-
-            ImGui::TreePop();
-        }        
+        }  
     }
 
     if (ImGui::CollapsingHeader("Camera Properties"))
     {
         ImGui::DragFloat("Near Plane", &cameras["current_camera"]->m_near, 0.01f, 0.0f, 100000.0f, "%.2f");
-        ImGui::DragFloat("Far Plane", &cameras["current_camera"]->m_far, 10.0f, 0.0f, 100000.0f, "%.2f");
+        ImGui::DragFloat("Far Plane", &cameras["current_camera"]->m_far, 1.0f, 0.0f, 100000.0f, "%.2f");
         ImGui::DragFloat("FOV", &cameras["current_camera"]->m_fov, 1.0f, 0.0f, 180.0f, "%.2f");
+        ImGui::DragFloat("Ortho Size", &cameras["current_camera"]->m_ortho_dimensions[1], 1.0f, 1.0f, 50.0f, "%.2f");
+        cameras["current_camera"]->m_ortho_dimensions[0] = -cameras["current_camera"]->m_ortho_dimensions[1];
+        cameras["current_camera"]->m_ortho_dimensions[2] = -cameras["current_camera"]->m_ortho_dimensions[1];
+        cameras["current_camera"]->m_ortho_dimensions[3] = cameras["current_camera"]->m_ortho_dimensions[1];
 
         const char* items_proj[] = {"perspective", "orthographic"};
         ImGui::Combo("Projection Type", &cameras["current_camera"]->m_curr_proj_mat, items_proj, 2);
@@ -468,14 +474,7 @@ void Scene::CubemapProgramRender(int window_width, int window_height)
 
 void Scene::VoxelMapSetup()
 {
-    voxelmap = new VoxelMap(300);
-    voxelmap->m_directional_light_camera = cameras["light_camera"];
-    voxelmap->m_CameraSetup();
-    voxelmap->m_CameraFramebufferSetup();
-    voxelmap->m_CameraShaderSetup();
-    voxelmap->m_ShaderSetup();
     voxelmap->m_Uniforms(dir_lights, cameras);
-    voxelmap->m_VoxelmapSetup();
 }
 
 void Scene::VoxelMapUpdate()
@@ -491,9 +490,10 @@ void Scene::VoxelMapGui()
 
 void Scene::VoxelMapRender()
 {
-    voxelmap->m_CameraRender(models);
+    // voxelmap->m_CameraRender(models);
 
-    if (voxelmap->m_voxelmap_generate == true || curr_frame == 4)
+    // voxelmap->m_Generate(models);
+    if (voxelmap->m_voxelmap_generate == true || curr_frame == 10)
     {
         voxelmap->m_Generate(models);
         voxelmap->m_voxelmap_generate = false;

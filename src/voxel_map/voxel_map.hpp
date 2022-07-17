@@ -16,17 +16,32 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include <stdlib.h>
+#include <unordered_map>
 
 struct VoxelMap
 {
     glm::ivec3 m_voxelmap_dimensions;
     ShaderProgram* m_voxelmap_program;
     FrameBuffer* m_voxelmap_framebuffer;
-    Camera* m_directional_light_camera;
     GLuint m_texture_id;
     GLubyte* m_texture_data;
     bool m_voxelmap_generate{false};
     int m_voxelmap_mipmap_levels{7};
+    bool indirect_light_active{false};
+    bool only_indirect_light_active{false};
+    bool only_indirect_light_high_contrast_active{false};
+    bool dark_places_help_active{false};
+    bool shadow_active{true};
+    bool weight_active{false};
+    float voxel_initial_offset{1.5f};
+    int directions_index{2};
+    float voxel_size{1};    
+    std::unordered_map<int, int> directions_map{
+        {0, 6},
+        {1, 9},
+        {2, 5},
+        {3, 1}
+    };
 
     Camera* m_camera;
     FrameBuffer* m_camera_framebuffer;
@@ -45,6 +60,7 @@ struct VoxelMap
         std::unordered_map<std::string, Camera*>& cameras
     );
     void m_VoxelmapSetup();
+    void m_VoxelmapSetRead();
 
     void m_Gui();
 

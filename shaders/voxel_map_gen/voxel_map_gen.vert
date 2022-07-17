@@ -21,6 +21,7 @@ uniform mat3 normal_mat;
 void main()
 {
     vert_pos = (proj_mat * view_mat * model_mat * vec4(vert_data, 1.0f)).xyz;
+    // vert_pos = vert_data;
     vert_normal = normalize(normal_mat * p_normal);
     tex_coord = p_tex_coord;
     light_vert_pos = light_proj_mat * light_view_mat * model_mat * vec4(vert_data, 1.0f);

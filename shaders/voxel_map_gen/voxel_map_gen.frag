@@ -28,11 +28,10 @@ layout(RGBA8) uniform image3D voxel_map;
 
 uniform DirectionalLight dir_light;
 uniform float shadow_map_bias;
+uniform int shadow_active;
 
 vec3 directional_light_func(in DataLight data);
 float directional_shadow_func(in vec4 light_frag_pos);
-
-out vec4 frag_color;
 
 void main()
 {
@@ -43,7 +42,7 @@ void main()
     data.frag_pos = frag_pos;
     data.light_frag_pos = frag_light_vert_pos;
 
-    frag_color = vec4(directional_light_func(data), 1.0f);
+    vec4 frag_color = vec4(directional_light_func(data), 1.0f);
 
     ivec3 voxel_map_size = imageSize(voxel_map);
     vec3 frag_pos_normalized = frag_pos * 0.5f + 0.5;
@@ -57,8 +56,12 @@ vec3 directional_light_func(in DataLight data)
 
     vec3 light_dir = normalize(-data.directional_light.direction); 
     vec3 diffuse = max(dot(light_dir, data.normal), 0.0f) * data.directional_light.diffuse * texture(texture_diffuse_0, data.tex_coord).rgb;
-
-    float shadow = directional_shadow_func(data.light_frag_pos);
+    
+    float shadow = 1.0f;
+    if (shadow_active == 1)
+    {
+        shadow = directional_shadow_func(data.light_frag_pos);
+    }    
     
     return shadow * diffuse;
 }

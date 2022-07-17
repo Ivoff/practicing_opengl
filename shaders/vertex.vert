@@ -11,6 +11,7 @@ out vec3 normal;
 out vec2 tex_coord;
 out mat3 tbn_mat;
 out vec4 light_frag_pos;
+out vec4 voxel_frag_pos;
 
 uniform mat4 model_mat;
 uniform mat4 view_mat;
@@ -20,6 +21,9 @@ uniform mat3 normal_mat;
 
 uniform mat4 light_view_mat;
 uniform mat4 light_proj_mat;
+
+uniform mat4 voxel_view_mat;
+uniform mat4 voxel_proj_mat;
 
 void main() 
 {
@@ -34,6 +38,8 @@ void main()
     frag_pos = (model_mat * vec4(vert_data, 1.0f)).xyz;
     light_frag_pos = (light_proj_mat * light_view_mat * vec4(frag_pos, 1.0f));
     tex_coord = p_tex_coord;
+    voxel_frag_pos = voxel_proj_mat * voxel_view_mat * vec4(frag_pos, 1.0f);
+    // voxel_frag_pos = vec4(frag_pos, 1.0f);
 
     gl_Position = proj_mat * view_mat * model_mat * vec4(vert_data, 1.0f);
 }

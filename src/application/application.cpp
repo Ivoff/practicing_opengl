@@ -71,6 +71,8 @@ Application::Application(int width, int height, const char* title, int frame_tar
 
 void Application::m_pre_update()
 {
+    m_scene.curr_frame = m_info.curr_frame;
+    
     unsigned int available_time = m_info.min_fps_time - (Utils::ticks() - m_info.last_frame_time);
 
     // precisa ser <= aqui porque se a funcao de update for simples e nao demorar passa direto
@@ -108,21 +110,20 @@ void Application::m_setup()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    m_scene.curr_frame = m_info.curr_frame;
-
     m_scene.SetupCamera(m_window->m_width, m_window->m_height);
-    m_scene.SetupPointLight();
+    // m_scene.SetupPointLight();
     m_scene.SetupDirLight();
 
     m_scene.directional_active = true;
     m_scene.map_type = 1;
     m_scene.shadow_map_bias = 0.005f;
     m_scene.omnidirectional_shadow_bias = 0.005f;
+    m_scene.voxelmap = new VoxelMap(256);
 
     m_scene.LoadModels();
 
     m_scene.SetupIlluminationProgram();
-    m_scene.IlluminationProgramUniforms();    
+    m_scene.IlluminationProgramUniforms();
     m_scene.programs["current_program"] = m_scene.programs["illumination_program"];
         
     m_scene.SetupLightlessProgram();
