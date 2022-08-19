@@ -38,6 +38,15 @@ void Keyboard::m_Input(Keyboard& keyboard, int key, int scancode, int action, in
         keyboard.m_toggle['z'] = false;
     }
 
+    if ((key == GLFW_KEY_H && action == GLFW_PRESS) && !keyboard.m_Toggle('h'))
+    {
+        keyboard.m_toggle['h'] = true;
+    }
+    else if ((key == GLFW_KEY_H && action == GLFW_PRESS) && keyboard.m_Toggle('h'))
+    {
+        keyboard.m_toggle['h'] = false;
+    }
+
     // =========================================================================================================================================================   
     // if ((key == GLFW_KEY_Z && action == GLFW_PRESS) && !keyboard.m_Toggle('z'))
     // {        

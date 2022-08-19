@@ -4,6 +4,7 @@
 #include <shader/shader.hpp>
 #include <camera/camera.hpp>
 #include <texture/texture.hpp>
+#include <stb/stb_image_write.h>
 #include <vector>
 #include <unordered_map>
 #include <material/material.hpp>
@@ -18,6 +19,7 @@
 #include <voxel_map/voxel_map.hpp>
 #include <stdlib.h>
 #include <time.h>
+#include <ctime>
 
 
 struct Scene
@@ -38,9 +40,12 @@ struct Scene
     float shadow_map_bias;
     bool shadow_enable{false};
     bool omnidirectional_shadow_enable{false};
+    bool print_screen{false};
     float omnidirectional_shadow_bias;
     int test_type{0};
     int curr_frame{0};
+    glm::vec3 translation_model{0.0f};
+    glm::vec3 scale_model{1.0f};
 
     Camera* GetCurrentCamera();
     
@@ -89,6 +94,9 @@ struct Scene
     void VoxelMapUpdate();
     void VoxelMapRender();
     void VoxelMapGui();
+
+    void SetupPrintFramebuffer(int width, int height);
+    void RenderPrintFramebuffer();
 
     void destroy();
 };

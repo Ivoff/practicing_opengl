@@ -33,15 +33,15 @@ void main()
 
         if (dominant_axis == triangle_normal.x)
         {
-            gl_Position = vec4(frag_pos.yz, 0.0f, 1.0f);
+            gl_Position = 1.5f * vec4(frag_pos.yz, 0.0f, 1.0f);
         }
         else if (dominant_axis == triangle_normal.y)
         {
-            gl_Position = vec4(frag_pos.xz, 0.0f, 1.0f);
+            gl_Position = 1.5f * vec4(frag_pos.xz, 0.0f, 1.0f);
         }
         else if (dominant_axis == triangle_normal.z)
         {
-            gl_Position = vec4(frag_pos.xy, 0.0f, 1.0f);
+            gl_Position = 1.5f * vec4(frag_pos.xy, 0.0f, 1.0f);
         }
 
         EmitVertex();

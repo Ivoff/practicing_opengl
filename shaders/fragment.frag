@@ -73,6 +73,7 @@ uniform int weight_active;
 uniform int only_indirect_light_active;
 uniform int only_indirect_light_high_contrast_active;
 uniform int dark_places_help_active;
+uniform float voxel_color_balance;
 
 uniform float far_plane;
 uniform float near_plane;
@@ -136,6 +137,11 @@ void main()
         {
             indirect_light_result *= 5.0f;
         }
+
+        // if (current_dark_place == 1)
+        // {
+        //     indirect_light_result *= (1.0f+dir_light.ambient);
+        // }
     }
 
     frag_color = vec4(directional_result + indirect_light_result, 1.0f);
@@ -158,6 +164,11 @@ void directional_light_func(in DataLight data, out vec3 result)
     {
         shadow = directional_shadow_func(light_frag_pos);
     }        
+
+    if (indirect_light_active == 1)
+    {
+        ambient = vec3(0.0f);
+    }
 
     result = ambient + shadow * (diffuse + specular);
 }
@@ -260,11 +271,11 @@ vec3 indirect_light_func(in vec4 voxel_frag_pos, in int directions)
 
     else if (directions == 5)
     {
-        directions_pool[0] = Cone(vec3(0.0f, 0.0f, 0.1f), 0.4142f, 0.125);
+        directions_pool[0] = Cone(vec3(0.0f, 0.0f, 0.1f), 0.577f, 0.75);
         directions_pool[1] = Cone(vec3(0.5f, 0.0f, 0.87f), 0.4142f, 0.125);
         directions_pool[2] = Cone(vec3(0.0f, 0.5f, 0.87f), 0.4142f, 0.125);
         directions_pool[3] = Cone(vec3(0.0f, -0.5f, 0.87f), 0.4142f, 0.125);
-        directions_pool[4] = Cone(vec3(-0.5f, 0.0f, 0.87f), 0.577f, 0.75);
+        directions_pool[4] = Cone(vec3(-0.5f, 0.0f, 0.87f), 0.4142f, 0.125);
     }
 
     else if (directions == 1)
@@ -286,11 +297,13 @@ vec3 indirect_light_func(in vec4 voxel_frag_pos, in int directions)
     for (int i = 0; i < directions; i += 1)
     {
         cur_direction = directions_pool[i].direction;
-        cur_direction = cur_direction.x * tangent + cur_direction.y * normal + cur_direction.z * bitangent;
+        // cur_direction = cur_direction.x * tangent + cur_direction.y * normal + cur_direction.z * bitangent;
 
-        //cur_direction = normalize(tbn_mat * directions_pool[i].direction);
+        cur_direction = normalize(tbn_mat * directions_pool[i].direction);
         irradiance += cone_trace(voxel_space_world_pos, cur_direction, directions_pool[i].aperture, directions_pool[i].weight);
     }
+
+    irradiance = irradiance * texture(texture_diffuse_0, tex_coord).rgb;
         
     return irradiance;
 }
@@ -301,15 +314,13 @@ vec3 cone_trace(in vec3 voxel_space_world_position, in vec3 direction, in float 
     {
         weight = 1;
     }
-
-    if (current_dark_place == 1)
-    {
-        aperture -= 0.15;
-    }
     
     vec4 radiance = vec4(0.0f);
+
 	float step = VOXEL_INITIAL_OFFSET * (VOXEL_SIZE/(VOXEL_DIMENSIONS.x)); // initial offset so the voxel
     
+    // voxel_space_world_position = voxel_space_world_position + (tbn_mat * normal) * (step + 5 * step);
+
     while(radiance.a == 0.0f)
     {
         float diameter = 2 * aperture * step; // aperture already have the tan(radians(aperture)) computed        
@@ -328,14 +339,15 @@ vec3 cone_trace(in vec3 voxel_space_world_position, in vec3 direction, in float 
             break;
         }
 
-     	vec3 tex_coord = position * 0.5f + 0.5f;
-     	vec4 sampling = textureLod(voxel_map, tex_coord, mipmap_level);
+     	vec3 vox_tex_coord = position * 0.5f + 0.5f;
+     	vec4 sampling = textureLod(voxel_map, vox_tex_coord, mipmap_level);
+        sampling = sampling / voxel_color_balance;
     	
         // alpha blending.
      	radiance.rgb += (1.0 - radiance.a) * sampling.a * sampling.rgb;
      	radiance.a += (1.0 - radiance.a) * sampling.a;
      	
-     	step += VOXEL_SIZE/VOXEL_DIMENSIONS.x;
+     	step += diameter;
     }
 
     return (weight * radiance.rgb);

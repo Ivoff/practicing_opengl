@@ -78,7 +78,7 @@ void Application::m_pre_update()
     // precisa ser <= aqui porque se a funcao de update for simples e nao demorar passa direto
     if (available_time > 0 && available_time <= m_info.min_fps_time)
     {        
-        std::this_thread::sleep_for(std::chrono::milliseconds(available_time));
+       std::this_thread::sleep_for(std::chrono::milliseconds(available_time));
     }    
 
     float current_delta = Utils::ticks() - m_info.last_frame_time;
@@ -111,14 +111,13 @@ void Application::m_setup()
     glEnable(GL_CULL_FACE);
 
     m_scene.SetupCamera(m_window->m_width, m_window->m_height);
-    // m_scene.SetupPointLight();
     m_scene.SetupDirLight();
 
     m_scene.directional_active = true;
     m_scene.map_type = 1;
     m_scene.shadow_map_bias = 0.005f;
     m_scene.omnidirectional_shadow_bias = 0.005f;
-    m_scene.voxelmap = new VoxelMap(256);
+    m_scene.voxelmap = new VoxelMap(128);
 
     m_scene.LoadModels();
 
@@ -136,6 +135,8 @@ void Application::m_setup()
     m_scene.ShadowThumbnailSetup();
 
     m_scene.VoxelMapSetup();
+
+    m_scene.SetupPrintFramebuffer(m_window->m_width, m_window->m_height);
 }
 
 void Application::m_update(float delta_time)
@@ -161,15 +162,20 @@ void Application::m_render()
 {
     m_imgui->m_NewFrame();
 
-    m_scene.SceneGui(m_mouse);
+    if (!m_keyboard->m_Toggle('h'))
+    {
+        m_scene.SceneGui(m_mouse);
 
-    m_scene.VoxelMapGui();
+        m_scene.VoxelMapGui();
+    }    
 
     m_scene.RenderShadowFramebuffer();
 
-    m_scene.RenderShadowThumbnailFramebuffer();
+    // m_scene.RenderShadowThumbnailFramebuffer();
 
     m_scene.VoxelMapRender();
+
+    m_scene.RenderPrintFramebuffer();
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);

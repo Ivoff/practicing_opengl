@@ -199,6 +199,7 @@ void Scene::IlluminationProgramUniforms()
     programs["illumination_program"]->m_setUniform("only_indirect_light_active", voxelmap->only_indirect_light_active);
     programs["illumination_program"]->m_setUniform("only_indirect_light_high_contrast_active", voxelmap->only_indirect_light_high_contrast_active);
     programs["illumination_program"]->m_setUniform("dark_places_help_active", voxelmap->dark_places_help_active);
+    programs["illumination_program"]->m_setUniform("voxel_color_balance", voxelmap->balance);
     programs["illumination_program"]->m_setUniform("voxel_map", 14);
 }
 
@@ -238,6 +239,15 @@ void Scene::UpdateModels()
     {
         programs["current_program"]->m_setUniform("normal_mat", i->second->m_GetNormalMat());
     }
+    models["sponza"]->m_model_mat[3][0] = translation_model[0];
+    models["sponza"]->m_model_mat[3][1] = translation_model[1];
+    models["sponza"]->m_model_mat[3][2] = translation_model[2];
+
+    // float scale_x = models["sponza"]->m_model_mat[0][0] * scale_model[0];
+    // float scale_y = models["sponza"]->m_model_mat[1][1] * scale_model[1];
+    // float scale_z = models["sponza"]->m_model_mat[2][2] * scale_model[2];
+
+    // models["sponza"]->m_model_mat = glm::scale()
 }
 
 void Scene::RenderShadowFramebuffer()
@@ -384,6 +394,11 @@ void Scene::SceneGui(Mouse* mouse)
         ImGui::DragFloat("Far Plane", &cameras["current_camera"]->m_far, 1.0f, 0.0f, 100000.0f, "%.2f");
         ImGui::DragFloat("FOV", &cameras["current_camera"]->m_fov, 1.0f, 0.0f, 180.0f, "%.2f");
         ImGui::DragFloat("Ortho Size", &cameras["current_camera"]->m_ortho_dimensions[1], 1.0f, 1.0f, 50.0f, "%.2f");
+        ImGui::InputFloat3("Position", &cameras["current_camera"]->m_position[0], "%.2f");
+        ImGui::InputFloat3("Front Rotation", &cameras["current_camera"]->m_front_rotation[0], "%.2f");
+        ImGui::InputFloat3("Front Position", &cameras["current_camera"]->m_front_position[0], "%.2f");
+        ImGui::Checkbox("Set Rotation", &cameras["current_camera"]->m_set_rotation);
+        ImGui::Checkbox("Set Position", &cameras["current_camera"]->m_set_position);
         cameras["current_camera"]->m_ortho_dimensions[0] = -cameras["current_camera"]->m_ortho_dimensions[1];
         cameras["current_camera"]->m_ortho_dimensions[2] = -cameras["current_camera"]->m_ortho_dimensions[1];
         cameras["current_camera"]->m_ortho_dimensions[3] = cameras["current_camera"]->m_ortho_dimensions[1];
@@ -399,6 +414,7 @@ void Scene::SceneGui(Mouse* mouse)
     {
         ImGui::DragFloat("Move Speed", &cameras["current_camera"]->m_speed, 0.05f, 0.0f, 100.0f, "%.2f");    
         ImGui::DragFloat("Mouse Sensibility", &mouse->m_sensitivity, 0.001f, 0.0f, 5.0f, "%.3f");
+        ImGui::Text("Camera position %s", glm::to_string(cameras["current_camera"]->m_position).c_str());
     }
 
     if (ImGui::CollapsingHeader("Scene Properties"))
@@ -420,6 +436,8 @@ void Scene::SceneGui(Mouse* mouse)
             ImGui::EndMenu();
         }
         ImGui::SliderInt("Map Type", &map_type, 1, 4);  
+        ImGui::DragFloat3("Model Translation", &translation_model[0], 0.01, -999.0f, 999.0f, "%.2f");
+        ImGui::DragFloat3("Scale Translation", &scale_model[0], 0.001, -5.0f, 5.0f, "%.3f");
     }
 
     if (ImGui::CollapsingHeader("Directional Shadow Map"))
@@ -433,6 +451,9 @@ void Scene::SceneGui(Mouse* mouse)
         ImGui::Checkbox("Enable?", &shadow_enable);
         ImGui::InputFloat("Bias", &shadow_map_bias, 0.005, 0.1);
     }
+
+    print_screen = ImGui::Button("Print Screen");
+
 
     ImGui::End();
 
@@ -490,7 +511,7 @@ void Scene::VoxelMapGui()
 
 void Scene::VoxelMapRender()
 {
-    // voxelmap->m_CameraRender(models);
+    voxelmap->m_CameraRender(models);
 
     // voxelmap->m_Generate(models);
     if (voxelmap->m_voxelmap_generate == true || curr_frame == 10)
@@ -498,4 +519,75 @@ void Scene::VoxelMapRender()
         voxelmap->m_Generate(models);
         voxelmap->m_voxelmap_generate = false;
     }
+}
+
+void Scene::SetupPrintFramebuffer(int width, int height)
+{
+    framebuffers["print_framebuffer"] = new FrameBuffer(width, height);
+
+    textures["print_framebuffer_color_tex"] = new Texture(GL_TEXTURE_2D, GL_RGB, GL_UNSIGNED_BYTE, width, height, NULL);
+    textures["print_framebuffer_color_tex"]->m_SetFiltering(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    textures["print_framebuffer_color_tex"]->m_SetFiltering(GL_TEXTURE_MAG_FILTER, GL_LINEAR);    
+    glGenerateMipmap(GL_TEXTURE_2D);
+    
+    textures["print_framebuffer_depth_tex"] = new Texture(GL_TEXTURE_2D, GL_DEPTH_COMPONENT, GL_FLOAT, width, height, NULL);
+
+    framebuffers["print_framebuffer"]->m_Bind();
+    framebuffers["print_framebuffer"]->m_AttachColor(*textures["print_framebuffer_color_tex"], "color_tex");
+    framebuffers["print_framebuffer"]->m_AttachDepth(*textures["print_framebuffer_depth_tex"]);
+    framebuffers["print_framebuffer"]->m_Check();
+    framebuffers["print_framebuffer"]->m_Unbind(); 
+}
+
+void Scene::RenderPrintFramebuffer()
+{
+    if (!print_screen)
+        return;
+    
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    glViewport(0, 0, framebuffers["print_framebuffer"]->m_width, framebuffers["print_framebuffer"]->m_height);
+    framebuffers["print_framebuffer"]->m_Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    for (auto i = models.begin(); i != models.end(); i++)
+    {
+        if (i->second->m_dont_render == false)
+        {
+            i->second->m_Draw(programs["current_program"]);
+        }
+    }
+    framebuffers["print_framebuffer"]->m_Unbind();
+
+    textures["print_framebuffer_color_tex"]->m_Bind();
+    GLbyte* data = new GLbyte[framebuffers["print_framebuffer"]->m_width * framebuffers["print_framebuffer"]->m_height * 3];
+    glGetTextureImage(
+        textures["print_framebuffer_color_tex"]->m_id, 
+        0, 
+        GL_RGB, 
+        GL_UNSIGNED_BYTE, 
+        framebuffers["print_framebuffer"]->m_width * framebuffers["print_framebuffer"]->m_height * 3 * sizeof(GLbyte), 
+        data
+    );
+
+    time_t now = std::time(0);
+    tm *ltm = std::localtime(&now);
+    std::string file_name = std::string("print_") + 
+        std::to_string(1900 + ltm->tm_year) + "_" +
+        std::to_string(1 + ltm->tm_mon) + "_" +
+        std::to_string(ltm->tm_mday) + "_" +
+        std::to_string(ltm->tm_hour) + ":" +
+        std::to_string(ltm->tm_min) + ":" +
+        std::to_string(ltm->tm_sec) + ".png";
+
+    stbi_flip_vertically_on_write(true);
+    stbi_write_png(
+        std::string(PROJECT_ROOT + std::string("prints/") + file_name).c_str(), 
+        framebuffers["print_framebuffer"]->m_width, 
+        framebuffers["print_framebuffer"]->m_height, 
+        3, 
+        data, 
+        0
+    );
+    textures["print_framebuffer_color_tex"]->m_Unbind();
 }

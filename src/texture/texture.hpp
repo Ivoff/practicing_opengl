@@ -3,6 +3,7 @@
 
 #include <glad/glad.h>
 #include <stb/stb_image.h>
+#include <utils/utils.cpp>
 #include <env.hpp>
 #include <string>
 #include <glm/vec3.hpp>

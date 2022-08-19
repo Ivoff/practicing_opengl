@@ -2,7 +2,7 @@
 
 int main()
 {
-    Application app = Application(800, 600, "OpenGL", 60);
+    Application app = Application(1920, 1080, "OpenGL", 60);
     app.m_setup();
     while(app.m_info.is_running)
     {

@@ -254,7 +254,7 @@ void VoxelMap::m_Gui()
         {
             if(ImGui::TreeNode("Render"))
             {
-                ImGui::ColorEdit4("Clear COlor", &m_camera_framebuffer_clear_color[0]);
+                ImGui::ColorEdit4("Clear Color", &m_camera_framebuffer_clear_color[0]);
 
                 ImGui::TreePop();
             }
@@ -262,10 +262,12 @@ void VoxelMap::m_Gui()
             {
                 ImGui::InputFloat("Near Plane", &m_camera->m_near, 1.0f);
                 ImGui::InputFloat("Far Plane", &m_camera->m_far, 1.0f);
-                ImGui::InputFloat("Ortho Volume size", &m_camera->m_ortho_dimensions[1], 1.0f);
-                m_camera->m_ortho_dimensions[0] = -m_camera->m_ortho_dimensions[1];
-                m_camera->m_ortho_dimensions[2] = -m_camera->m_ortho_dimensions[1];
-                m_camera->m_ortho_dimensions[3] = m_camera->m_ortho_dimensions[1];
+                ImGui::Separator();
+                ImGui::Text("Ortho Volume Dimensions");
+                ImGui::InputFloat("Left", &m_camera->m_ortho_dimensions[0], 1.0f);
+                ImGui::InputFloat("Right", &m_camera->m_ortho_dimensions[1], 1.0f);
+                ImGui::InputFloat("Bottom", &m_camera->m_ortho_dimensions[2], 1.0f);
+                ImGui::InputFloat("Top", &m_camera->m_ortho_dimensions[3], 1.0f);
 
                 ImGui::TreePop();
             }
@@ -297,6 +299,7 @@ void VoxelMap::m_Gui()
             const char* items_cam[] = {"6", "9", "5", "1"};
             ImGui::Combo("Directions", &directions_index, items_cam, 4);
             ImGui::InputFloat("Voxel Size", &voxel_size, 0.5f, 0.5f, "%.2f");
+            ImGui::DragFloat("Color Balance", &balance, 0.001, 0.01, 1.0f, "%.3f");
             if (voxel_size < 1)
             {
                 voxel_size = 1;

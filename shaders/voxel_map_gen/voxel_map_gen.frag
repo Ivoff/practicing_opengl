@@ -42,7 +42,7 @@ void main()
     data.frag_pos = frag_pos;
     data.light_frag_pos = frag_light_vert_pos;
 
-    vec4 frag_color = vec4(directional_light_func(data), 1.0f);
+    vec4 frag_color = vec4(pow(directional_light_func(data), vec3(1.0f/2.2f)), 1.0f);
 
     ivec3 voxel_map_size = imageSize(voxel_map);
     vec3 frag_pos_normalized = frag_pos * 0.5f + 0.5;

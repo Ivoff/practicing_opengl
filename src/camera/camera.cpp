@@ -32,7 +32,7 @@ Camera::Camera(float fov, float near, float far, int width, int height):
 
     m_yaw = 90.0f; // para garantir que a camera comece apontada na direção do z negativo
     m_pitch = 0.0f;
-    m_speed = 0.5f;
+    m_speed = 4.0f;
 }
 
 void Camera::m_UpdateProjMat(float fov, float near, float far, int width, int height)
@@ -66,9 +66,14 @@ void Camera::m_SetFrontDir(float yaw, float pitch)
 
 void Camera::m_LookAt(glm::vec3 direction)
 {    
+    if (m_set_position)
+    {
+        direction = glm::normalize(m_front_position - m_position);
+    }
+    
     glm::vec3 right_vec = glm::normalize(glm::cross(direction, glm::vec3(0, 1, 0)));
     m_up = glm::normalize(glm::cross(right_vec, direction));
-    
+
     m_view_mat = glm::lookAt(m_position, m_position+direction, m_up);
 }
 

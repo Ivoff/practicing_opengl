@@ -34,6 +34,7 @@ struct VoxelMap
     bool shadow_active{true};
     bool weight_active{false};
     float voxel_initial_offset{1.5f};
+    float balance{1.0f};
     int directions_index{2};
     float voxel_size{1};    
     std::unordered_map<int, int> directions_map{
